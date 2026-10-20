@@ -133,7 +133,7 @@ export function migrateLegacyThemeValue(raw: string | null | undefined): ThemePr
   if (normalized === 'dark') return { ...DEFAULT_THEME_PREFERENCES, mode: 'dark' };
   if (normalized === 'light') return { ...DEFAULT_THEME_PREFERENCES, mode: 'light' };
   if (!isBuiltInPaletteId(normalized)) return undefined;
-  const mode: ThemeMode = normalized.startsWith('omc-light') || normalized === 'porcelain' || normalized === 'sandstone' ? 'light' : 'dark';
+  const mode: ThemeMode = normalized.startsWith('omc-light') || normalized === 'porcelain' || normalized === 'sandstone' || normalized === 'clay' ? 'light' : 'dark';
   return {
     mode,
     palettes: { ...DEFAULT_THEME_PREFERENCES.palettes, [mode]: normalized },

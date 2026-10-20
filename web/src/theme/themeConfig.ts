@@ -1,3 +1,4 @@
+import { applyClayTheme } from './clayTheme';
 import { theme, type ThemeConfig } from 'antd';
 
 import { THREAD_FILL_SHARES, THREAD_RADII, type ResolvedPalette, type ThemePalette } from './palette';
@@ -94,7 +95,12 @@ export const MOTION_ROUTE_EXIT: MotionToken = { duration: 200, easing: 'cubic-be
 /** A live label repeats this glyph-only sweep; unlike a transition, its period lasts with the work. */
 export const MOTION_LIVE_TEXT: MotionToken = { duration: 900, easing: 'linear' };
 
-export function createThemeConfig(resolved: Pick<ResolvedPalette, 'mode' | 'palette'>): ThemeConfig {
+export function createThemeConfig(resolved: Pick<ResolvedPalette, 'mode' | 'palette'> & { id?: string }): ThemeConfig {
+  const base = createBaseThemeConfig(resolved);
+  return resolved.id === 'clay' ? applyClayTheme(base, resolved.palette) : base;
+}
+
+function createBaseThemeConfig(resolved: Pick<ResolvedPalette, 'mode' | 'palette'>): ThemeConfig {
   const dark = resolved.mode === 'dark';
   const t = resolved.palette;
 

@@ -1018,6 +1018,8 @@ const DICT: Record<string, [string, string]> = {
   'theme.forest_desc': ['深绿背景与明亮植物色调', 'Deep green surfaces with vivid botanical accents'],
   'theme.sandstone': ['Sandstone', 'Sandstone'],
   'theme.sandstone_desc': ['暖砂浅色背景与青绿色强调色', 'Warm sand surfaces with a teal accent'],
+  'theme.clay': ['Clay 软陶', 'Clay'],
+  'theme.clay_desc': ['奶油底色、马卡龙配色与柔和立体卡片', 'Cream surfaces, macaron pastels and soft puffy cards'],
   'omc.language': ['界面语言', 'Language'],
   'omc.scroll_smoothing': ['平滑滚动', 'Smooth scrolling'],
   'omc.scroll_smoothing_desc': ['鼠标滚轮与键盘滚动平滑过渡，不再逐格跳动；“跟随系统”在系统要求减少动态效果时关闭。', 'Wheel and keyboard scrolls glide instead of stepping; Follow system turns this off when the system asks for reduced motion.'],
