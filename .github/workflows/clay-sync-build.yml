@@ -133,10 +133,10 @@ jobs:
         run: |
           set -euo pipefail
           printf '上游 [%s](https://github.com/%s/releases/tag/%s) + Clay 软陶主题。\n\n- `oh-my-cpa-linux-amd64` / `oh-my-cpa-linux-arm64`：已内嵌前端的单文件程序\n- `sha256sums.txt`：校验值\n- `*-source.tar.gz`：打完补丁的完整源码\n' "$TAG" "$UPSTREAM" "$TAG" > /tmp/notes.md
-          if gh release view "$CLAY" >/dev/null 2>&1; then
-            gh release upload "$CLAY" out/* --clobber
+          if gh release view "$CLAY" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$CLAY" --repo "$GITHUB_REPOSITORY" out/* --clobber
           else
-            gh release create "$CLAY" out/* --target clay --title "$CLAY" --notes-file /tmp/notes.md
+            gh release create "$CLAY" --repo "$GITHUB_REPOSITORY" out/* --target clay --title "$CLAY" --notes-file /tmp/notes.md
           fi
 
       - name: Push patched source as clay-<tag> (best effort)
