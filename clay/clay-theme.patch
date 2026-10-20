@@ -1,0 +1,354 @@
+diff --git a/scripts/test-theme-presets.ts b/scripts/test-theme-presets.ts
+index 0d96d8a..2dcbca7 100644
+--- a/scripts/test-theme-presets.ts
++++ b/scripts/test-theme-presets.ts
+@@ -68,11 +68,11 @@ const requestRowMinHeight = Number(requestRowRule.match(/min-height:\s*(\d+)px/)
+ 
+ // ── the registry ─────────────────────────────────────────────────────────────
+ 
+-assert.equal(BUILT_IN_PALETTES.length, 6, 'the registry keeps three palettes per mode');
++assert.equal(BUILT_IN_PALETTES.length, 7, 'the registry keeps three palettes per mode, plus Clay');
+ assert.equal(new Set(BUILT_IN_PALETTE_IDS).size, BUILT_IN_PALETTE_IDS.length, 'palette ids must be unique');
+ assert.equal(new Set(BUILT_IN_PALETTES.map((definition) => definition.id)).size, BUILT_IN_PALETTES.length);
+ for (const mode of ['dark', 'light'] as const) {
+-  assert.equal(builtInPalettesForMode(mode).length, 3, `${mode} mode offers exactly three palettes`);
++  assert.equal(builtInPalettesForMode(mode).length, mode === 'light' ? 4 : 3, `${mode} mode offers its built-in palettes`);
+   for (const definition of builtInPalettesForMode(mode)) {
+     assert.equal(definition.mode, mode, `${definition.id} belongs to ${mode}`);
+   }
+diff --git a/web/src/i18n/index.tsx b/web/src/i18n/index.tsx
+index 5a0892b..0111dd2 100644
+--- a/web/src/i18n/index.tsx
++++ b/web/src/i18n/index.tsx
+@@ -1018,6 +1018,8 @@ const DICT: Record<string, [string, string]> = {
+   'theme.forest_desc': ['深绿背景与明亮植物色调', 'Deep green surfaces with vivid botanical accents'],
+   'theme.sandstone': ['Sandstone', 'Sandstone'],
+   'theme.sandstone_desc': ['暖砂浅色背景与青绿色强调色', 'Warm sand surfaces with a teal accent'],
++  'theme.clay': ['Clay 软陶', 'Clay'],
++  'theme.clay_desc': ['奶油底色、马卡龙配色与柔和立体卡片', 'Cream surfaces, macaron pastels and soft puffy cards'],
+   'omc.language': ['界面语言', 'Language'],
+   'omc.scroll_smoothing': ['平滑滚动', 'Smooth scrolling'],
+   'omc.scroll_smoothing_desc': ['鼠标滚轮与键盘滚动平滑过渡，不再逐格跳动；“跟随系统”在系统要求减少动态效果时关闭。', 'Wheel and keyboard scrolls glide instead of stepping; Follow system turns this off when the system asks for reduced motion.'],
+diff --git a/web/src/i18n/locales/ms.ts b/web/src/i18n/locales/ms.ts
+index ebd0575..987b8cb 100644
+--- a/web/src/i18n/locales/ms.ts
++++ b/web/src/i18n/locales/ms.ts
+@@ -780,6 +780,8 @@ export const MS: Readonly<Record<string, string>> = {
+   "theme.forest_desc": "Permukaan hijau dalam dengan aksen botani yang terang",
+   "theme.sandstone": "Batu pasir",
+   "theme.sandstone_desc": "Permukaan pasir hangat dengan aksen teal",
++  "theme.clay": "Clay",
++  "theme.clay_desc": "Permukaan krim, warna pastel makaron dan kad lembut",
+   "omc.theme_mode": "Mod tema",
+   "omc.theme_mode_light": "Cerah",
+   "omc.theme_mode_dark": "Gelap",
+diff --git a/web/src/i18n/locales/zh-Hant.ts b/web/src/i18n/locales/zh-Hant.ts
+index 25fcee9..334faf6 100644
+--- a/web/src/i18n/locales/zh-Hant.ts
++++ b/web/src/i18n/locales/zh-Hant.ts
+@@ -780,6 +780,8 @@ export const ZH_HANT: Readonly<Record<string, string>> = {
+   "theme.forest_desc": "深綠背景與明亮植物色調",
+   "theme.sandstone": "Sandstone",
+   "theme.sandstone_desc": "暖砂淺色背景與青綠色強調色",
++  "theme.clay": "Clay 軟陶",
++  "theme.clay_desc": "奶油底色、馬卡龍配色與柔和立體卡片",
+   "omc.theme_mode": "主題模式",
+   "omc.theme_mode_light": "淺色",
+   "omc.theme_mode_dark": "暗色",
+diff --git a/web/src/main.tsx b/web/src/main.tsx
+index 6fe314d..0f51369 100644
+--- a/web/src/main.tsx
++++ b/web/src/main.tsx
+@@ -2,6 +2,7 @@ import React from 'react';
+ import ReactDOM from 'react-dom/client';
+ import { App } from './App';
+ import './index.css';
++import './theme/clay.css';
+ import { applyStoredFonts } from './theme/fontLibrary';
+ 
+ // Before the first render, so the first frame is painted in the typeface this browser last
+diff --git a/web/src/theme/clay.css b/web/src/theme/clay.css
+new file mode 100644
+index 0000000..c9d29a1
+--- /dev/null
++++ b/web/src/theme/clay.css
+@@ -0,0 +1,115 @@
++/* ── Clay theme ─────────────────────────────────────────────────────────────
++   Soft pastel claymorphism. Everything is scoped to the Clay palette, so the other
++   built-in palettes are untouched. Selectable in Settings → Appearance. */
++html[data-theme='clay'] {
++  --clay-pink: #f7c6d6;
++  --clay-lavender: #d9d0fb;
++  --clay-mint: #bfeee3;
++  --clay-peach: #fdd9bd;
++  --clay-periwinkle: #c9d8fb;
++  --clay-shadow: 0 14px 30px -12px rgba(122, 104, 160, .30), 0 3px 8px rgba(122, 104, 160, .08);
++  --clay-shadow-sm: 0 6px 14px -6px rgba(122, 104, 160, .28);
++  --clay-inner: inset 0 2px 0 rgba(255, 255, 255, .85), inset 0 -3px 6px rgba(150, 120, 170, .06);
++  --font-ui: "Nunito", "Varela Round", "M PLUS Rounded 1c", "HarmonyOS Sans SC", "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans CJK SC", "Noto Sans SC", system-ui, sans-serif !important;
++  --radius-xs: 6px;
++  --radius-sm: 12px;
++  --radius-document: 14px;
++  --radius-control: 14px;
++  --radius-surface: 22px;
++  --radius-thread: 22px;
++  background: var(--bg);
++}
++html[data-theme='clay'] body {
++  font-family: var(--font-ui);
++  background:
++    radial-gradient(900px 500px at 100% -10%, rgba(217, 208, 251, .35), transparent 60%),
++    radial-gradient(700px 420px at -10% 110%, rgba(253, 217, 189, .30), transparent 60%),
++    var(--bg);
++  background-attachment: fixed;
++}
++html[data-theme='clay'] .ant-layout,
++html[data-theme='clay'] .ant-layout-content,
++html[data-theme='clay'] .ant-layout-header { background: transparent !important; }
++
++/* Raised clay tiles */
++html[data-theme='clay'] .ant-card,
++html[data-theme='clay'] .dashboard-tile,
++html[data-theme='clay'] .ant-table-wrapper .ant-table,
++html[data-theme='clay'] .theme-preset-card {
++  border: 1px solid rgba(255, 255, 255, .7) !important;
++  border-radius: 26px !important;
++  background: var(--surface) !important;
++  box-shadow: var(--clay-shadow), var(--clay-inner) !important;
++}
++html[data-theme='clay'] .ant-table-wrapper .ant-table-container { border-radius: 26px; overflow: hidden; }
++html[data-theme='clay'] .ant-table-wrapper .ant-table-thead > tr > th { background: #fbf4ec !important; border-bottom-color: var(--border) !important; }
++
++/* Pastel tint per dashboard tile, cycling the macaron set */
++html[data-theme='clay'] .dashboard-tile { position: relative; overflow: hidden; }
++html[data-theme='clay'] .dashboard-tile::before {
++  content: ""; position: absolute; inset: 0 0 auto 0; height: 100%; pointer-events: none;
++  background: linear-gradient(160deg, var(--tile-tint, var(--clay-lavender)) 0%, transparent 55%); opacity: .55;
++}
++html[data-theme='clay'] .dashboard-tile > * { position: relative; }
++html[data-theme='clay'] .dashboard-cell:nth-child(5n+1) > .dashboard-tile { --tile-tint: var(--clay-lavender); }
++html[data-theme='clay'] .dashboard-cell:nth-child(5n+2) > .dashboard-tile { --tile-tint: var(--clay-pink); }
++html[data-theme='clay'] .dashboard-cell:nth-child(5n+3) > .dashboard-tile { --tile-tint: var(--clay-mint); }
++html[data-theme='clay'] .dashboard-cell:nth-child(5n+4) > .dashboard-tile { --tile-tint: var(--clay-peach); }
++html[data-theme='clay'] .dashboard-cell:nth-child(5n+5) > .dashboard-tile { --tile-tint: var(--clay-periwinkle); }
++
++/* Sidebar: floating soft panel, pill navigation */
++html[data-theme='clay'] .app-sider {
++  background: transparent !important;
++}
++html[data-theme='clay'] .app-sider .ant-layout-sider-children {
++  margin: 12px 0 12px 12px; height: calc(100% - 24px);
++  border-radius: 28px; background: var(--surface);
++  box-shadow: var(--clay-shadow), var(--clay-inner);
++}
++html[data-theme='clay'] .app-menu .ant-menu-item::after, html[data-theme='clay'] .app-menu .ant-menu-item::before { display: none !important; }
++html[data-theme='clay'] .app-menu .ant-menu-item-selected { border-left: 0 !important; }
++html[data-theme='clay'] .app-menu .ant-menu-item { border-radius: 999px !important; font-weight: 600; }
++html[data-theme='clay'] .app-menu .ant-menu-item-selected {
++  background: linear-gradient(135deg, #e9e2ff, #fbe1ec) !important; color: #4f43b3 !important;
++  box-shadow: var(--clay-shadow-sm), inset 0 1px 0 rgba(255,255,255,.9) !important;
++  border-radius: 999px !important;
++}
++html[data-theme='clay'] .app-menu .ant-menu-item-selected:hover { background: linear-gradient(135deg, #e3dbff, #f9d6e4) !important; }
++
++/* Pills */
++html[data-theme='clay'] .ant-btn { border-radius: 999px !important; font-weight: 700; }
++html[data-theme='clay'] .ant-btn-primary { background: linear-gradient(135deg, #8f82ea, #b39cf0) !important; border: 0 !important; box-shadow: 0 8px 16px -8px rgba(123,111,214,.7), inset 0 1px 0 rgba(255,255,255,.35) !important; }
++html[data-theme='clay'] .ant-btn-default { background: #fffaf5 !important; box-shadow: var(--clay-shadow-sm), var(--clay-inner) !important; }
++html[data-theme='clay'] .ant-tag, html[data-theme='clay'] .tag, html[data-theme='clay'] .status-label {
++  border-radius: 999px !important; padding-inline: 10px;
++}
++html[data-theme='clay'] .ant-segmented { border-radius: 999px; padding: 3px; box-shadow: inset 0 2px 5px rgba(120,100,150,.10); }
++html[data-theme='clay'] .ant-segmented-item, html[data-theme='clay'] .ant-segmented-thumb { border-radius: 999px !important; }
++html[data-theme='clay'] .ant-segmented-item-selected { box-shadow: var(--clay-shadow-sm) !important; }
++
++/* Soft inputs */
++html[data-theme='clay'] .ant-input, html[data-theme='clay'] .ant-input-affix-wrapper,
++html[data-theme='clay'] .ant-select-selector, html[data-theme='clay'] .ant-input-number,
++html[data-theme='clay'] .ant-picker, html[data-theme='clay'] .ant-select {
++  border-radius: 14px !important; background: #fffdfa !important;
++  box-shadow: inset 0 2px 5px rgba(120, 100, 150, .08);
++}
++html[data-theme='clay'] .ant-switch { box-shadow: inset 0 2px 4px rgba(0,0,0,.08); }
++html[data-theme='clay'] .ant-switch.ant-switch-checked, html[data-theme='clay'] .ant-switch.ant-switch-checked:hover:not(.ant-switch-disabled) { background: linear-gradient(135deg, #8f82ea, #f49cb8) !important; }
++
++/* Capsule meters / progress */
++html[data-theme='clay'] .meter, html[data-theme='clay'] .progress-bar { height: 8px; border-radius: 999px; background: #efe6f6; }
++html[data-theme='clay'] .meter > *, html[data-theme='clay'] .progress-bar > * { border-radius: 999px; }
++html[data-theme='clay'] .legend-dot { border-radius: 999px !important; }
++
++/* Floating layers */
++html[data-theme='clay'] .ant-modal-content, html[data-theme='clay'] .ant-drawer-content,
++html[data-theme='clay'] .ant-dropdown-menu, html[data-theme='clay'] .ant-popover-inner,
++html[data-theme='clay'] .ant-select-dropdown, html[data-theme='clay'] .ant-notification-notice {
++  border-radius: 22px !important; box-shadow: var(--clay-shadow) !important;
++}
++html[data-theme='clay'] *::-webkit-scrollbar-thumb { background: #e2d6ea; border-radius: 999px; }
++html[data-theme='clay'] .app-menu .ant-menu-item { margin-inline: 12px !important; width: calc(100% - 24px) !important; }
++/* Console's own toggle (CSS-module switch) */
++html[data-theme='clay'] [role='switch'][class*='is-checked'] { background: linear-gradient(135deg, #8f82ea, #f49cb8) !important; border-color: transparent !important; }
++html[data-theme='clay'] [role='switch'] { border-radius: 999px !important; --success: #9b8cf2; }
+diff --git a/web/src/theme/clayTheme.ts b/web/src/theme/clayTheme.ts
+new file mode 100644
+index 0000000..f5ceb1d
+--- /dev/null
++++ b/web/src/theme/clayTheme.ts
+@@ -0,0 +1,51 @@
++import type { ThemeConfig } from 'antd';
++import type { ThemePalette } from './palette';
++
++/**
++ * Clay: a soft pastel "claymorphism" layer over the base Ant Design config.
++ *
++ * Kept as a pure overlay so upstream changes to `createThemeConfig` flow through untouched; the
++ * page-level look (puffy shadows, capsule shapes) lives in `clay.css`, scoped to
++ * `[data-theme='clay']`.
++ */
++const CLAY_SHADOW = '0 10px 24px -8px rgba(122, 104, 160, 0.28), 0 2px 6px rgba(122, 104, 160, 0.10)';
++
++export function applyClayTheme(base: ThemeConfig, t: ThemePalette): ThemeConfig {
++  const comp = base.components ?? {};
++  const pill = { borderRadius: 999, borderRadiusLG: 999, borderRadiusSM: 999 };
++  return {
++    ...base,
++    token: {
++      ...base.token,
++      fontFamily: 'var(--font-ui)',
++      borderRadius: 14,
++      borderRadiusLG: 22,
++      borderRadiusSM: 10,
++      borderRadiusXS: 6,
++      colorSuccess: '#3fae8f',
++      colorWarning: '#e0954a',
++      colorError: '#e06c8a',
++      boxShadow: CLAY_SHADOW,
++      boxShadowSecondary: CLAY_SHADOW,
++      boxShadowTertiary: CLAY_SHADOW,
++    },
++    components: {
++      ...comp,
++      Button: { ...comp.Button, ...pill, controlHeight: 34, primaryShadow: '0 6px 14px -6px rgba(123,111,214,0.6)', defaultShadow: 'none' },
++      Input: { ...comp.Input, borderRadius: 14, activeShadow: `0 0 0 3px ${t.accent}26` },
++      InputNumber: { ...comp.InputNumber, borderRadius: 14 },
++      Select: { ...comp.Select, borderRadius: 14, optionSelectedBg: '#efeafd' },
++      Tag: { ...comp.Tag, borderRadiusSM: 999, defaultBg: '#f3eefb' },
++      Segmented: { ...comp.Segmented, ...pill, itemSelectedBg: '#ffffff', trackBg: '#f1e9e1' },
++      Card: { ...comp.Card, borderRadiusLG: 24 },
++      Modal: { ...comp.Modal, borderRadiusLG: 26, boxShadow: CLAY_SHADOW },
++      Drawer: { ...comp.Drawer },
++      Popover: { ...comp.Popover, borderRadiusLG: 18, boxShadowSecondary: CLAY_SHADOW },
++      Dropdown: { ...comp.Dropdown, borderRadiusLG: 18, boxShadowSecondary: CLAY_SHADOW },
++      Menu: { ...comp.Menu, itemBorderRadius: 999, itemSelectedBg: '#ece6fd', itemSelectedColor: '#5b4fc0' },
++      Table: { ...comp.Table, borderRadiusLG: 20, headerBg: '#fbf5ee' },
++      Switch: { ...comp.Switch, colorPrimary: '#9b8cf2', colorPrimaryHover: '#8f82ea' },
++      Notification: { ...comp.Notification, borderRadiusLG: 20 },
++    },
++  };
++}
+diff --git a/web/src/theme/palette.ts b/web/src/theme/palette.ts
+index b7c12b8..7a751b4 100644
+--- a/web/src/theme/palette.ts
++++ b/web/src/theme/palette.ts
+@@ -36,7 +36,7 @@ export type ThemeMode = 'dark' | 'light';
+ 
+ export const THEME_MODES: readonly ThemeMode[] = ['dark', 'light'];
+ 
+-export type BuiltInPaletteId = 'omc-dark' | 'omc-light' | 'midnight' | 'porcelain' | 'forest' | 'sandstone';
++export type BuiltInPaletteId = 'omc-dark' | 'omc-light' | 'midnight' | 'porcelain' | 'forest' | 'sandstone' | 'clay';
+ 
+ export const BUILT_IN_PALETTE_IDS: readonly BuiltInPaletteId[] = [
+   'omc-dark',
+@@ -45,6 +45,7 @@ export const BUILT_IN_PALETTE_IDS: readonly BuiltInPaletteId[] = [
+   'porcelain',
+   'forest',
+   'sandstone',
++  'clay',
+ ];
+ 
+ /** What a mode's palette selection can point at: one registered palette, or the operator's own. */
+@@ -391,6 +392,9 @@ export interface BuiltInPalette {
+   nameKey: string;
+   descriptionKey: string;
+   core: ThemeCore;
++  /** Optional chart/route overrides for a palette with its own colour story (Clay). */
++  series?: readonly string[];
++  route?: readonly string[];
+ }
+ 
+ /**
+@@ -503,6 +507,26 @@ export const BUILT_IN_PALETTES: readonly BuiltInPalette[] = [
+       accent: '#0f766e',
+     },
+   },
++  {
++    id: 'clay',
++    mode: 'light',
++    nameKey: 'theme.clay',
++    descriptionKey: 'theme.clay_desc',
++    core: {
++      bg: '#f7f1ea',
++      surface: '#fffaf5',
++      elevated: '#fffdfa',
++      fg: '#3d3550',
++      fg2: '#5e5672',
++      muted: '#7a7290',
++      meta: '#9d95ad',
++      border: '#ece2d8',
++      accent: '#5f51c2',
++    },
++    // Macaron hues, deepened just enough to clear the 3:1 graphical-object contrast on the card.
++    series: ['#8f7ef0', '#ed5988', '#349c8c', '#e36a0c', '#528bf0', '#d562c8'],
++    route: ['#8f7ef0', '#349c8c', '#ed5988', '#528bf0', '#e36a0c', '#9488ad'],
++  },
+ ];
+ 
+ /** The palettes one mode offers, in the order the settings page lists them. */
+@@ -613,7 +637,11 @@ export function resolvedBuiltInPalette(id: BuiltInPaletteId): ResolvedPalette {
+   const resolved: ResolvedPalette = {
+     id,
+     mode: definition.mode,
+-    palette: derivePalette(definition.mode, definition.core),
++    palette: {
++      ...derivePalette(definition.mode, definition.core),
++      ...(definition.series ? { series: definition.series } : {}),
++      ...(definition.route ? { route: definition.route } : {}),
++    },
+     isCustom: false,
+     nameKey: definition.nameKey,
+   };
+diff --git a/web/src/theme/themeConfig.ts b/web/src/theme/themeConfig.ts
+index 14865d5..3299699 100644
+--- a/web/src/theme/themeConfig.ts
++++ b/web/src/theme/themeConfig.ts
+@@ -1,3 +1,4 @@
++import { applyClayTheme } from './clayTheme';
+ import { theme, type ThemeConfig } from 'antd';
+ 
+ import { THREAD_FILL_SHARES, THREAD_RADII, type ResolvedPalette, type ThemePalette } from './palette';
+@@ -94,7 +95,12 @@ export const MOTION_ROUTE_EXIT: MotionToken = { duration: 200, easing: 'cubic-be
+ /** A live label repeats this glyph-only sweep; unlike a transition, its period lasts with the work. */
+ export const MOTION_LIVE_TEXT: MotionToken = { duration: 900, easing: 'linear' };
+ 
+-export function createThemeConfig(resolved: Pick<ResolvedPalette, 'mode' | 'palette'>): ThemeConfig {
++export function createThemeConfig(resolved: Pick<ResolvedPalette, 'mode' | 'palette'> & { id?: string }): ThemeConfig {
++  const base = createBaseThemeConfig(resolved);
++  return resolved.id === 'clay' ? applyClayTheme(base, resolved.palette) : base;
++}
++
++function createBaseThemeConfig(resolved: Pick<ResolvedPalette, 'mode' | 'palette'>): ThemeConfig {
+   const dark = resolved.mode === 'dark';
+   const t = resolved.palette;
+ 
+diff --git a/web/src/theme/themePreference.ts b/web/src/theme/themePreference.ts
+index 1425227..66d38de 100644
+--- a/web/src/theme/themePreference.ts
++++ b/web/src/theme/themePreference.ts
+@@ -133,7 +133,7 @@ export function migrateLegacyThemeValue(raw: string | null | undefined): ThemePr
+   if (normalized === 'dark') return { ...DEFAULT_THEME_PREFERENCES, mode: 'dark' };
+   if (normalized === 'light') return { ...DEFAULT_THEME_PREFERENCES, mode: 'light' };
+   if (!isBuiltInPaletteId(normalized)) return undefined;
+-  const mode: ThemeMode = normalized.startsWith('omc-light') || normalized === 'porcelain' || normalized === 'sandstone' ? 'light' : 'dark';
++  const mode: ThemeMode = normalized.startsWith('omc-light') || normalized === 'porcelain' || normalized === 'sandstone' || normalized === 'clay' ? 'light' : 'dark';
+   return {
+     mode,
+     palettes: { ...DEFAULT_THEME_PREFERENCES.palettes, [mode]: normalized },

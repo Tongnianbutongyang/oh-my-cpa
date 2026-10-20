@@ -1,0 +1,161 @@
+name: clay-sync-build
+# 每天检查上游 WizisCool/oh-my-cpa 是否发布了新版本；有新版就打上软陶主题补丁、编译并发布 <tag>-clay。
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 指定上游版本（留空 = 上游最新 release）
+        required: false
+        type: string
+      force:
+        description: 已存在同名 release 时也重新编译并覆盖附件
+        required: false
+        type: boolean
+        default: false
+permissions:
+  contents: write
+  issues: write
+concurrency:
+  group: clay-sync-build
+  cancel-in-progress: false
+env:
+  UPSTREAM: WizisCool/oh-my-cpa
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout clay branch (patch + workflow)
+        uses: actions/checkout@v4
+        with:
+          ref: clay
+          path: fork
+
+      - name: Resolve upstream tag
+        id: plan
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+          FORCE: ${{ inputs.force }}
+        run: |
+          set -euo pipefail
+          TAG="${INPUT_TAG:-}"
+          if [ -z "$TAG" ]; then
+            TAG=$(gh api "repos/$UPSTREAM/releases/latest" --jq .tag_name)
+          fi
+          echo "upstream tag: $TAG"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "clay=$TAG-clay" >> "$GITHUB_OUTPUT"
+          if gh release view "$TAG-clay" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 && [ "${FORCE:-false}" != "true" ]; then
+            echo "release $TAG-clay already exists, nothing to do"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout upstream tag
+        if: steps.plan.outputs.skip == 'false'
+        run: |
+          set -euo pipefail
+          git clone --quiet "https://github.com/$UPSTREAM.git" src
+          git -C src -c advice.detachedHead=false checkout --quiet "refs/tags/${{ steps.plan.outputs.tag }}"
+
+      - name: Apply clay theme patch
+        id: patch
+        if: steps.plan.outputs.skip == 'false'
+        working-directory: src
+        run: |
+          set -uo pipefail
+          git config user.name "clay-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git apply --3way --index ../fork/clay/clay-theme.patch > /tmp/patch.log 2>&1 && ! git diff --cached --quiet && [ -z "$(git diff --name-only --diff-filter=U)" ]; then
+            cat /tmp/patch.log
+            git commit --quiet -m "feat(theme): Clay 软陶主题 (${{ steps.plan.outputs.tag }})"
+          else
+            cat /tmp/patch.log
+            git status --short >> /tmp/patch.log
+            exit 1
+          fi
+
+      - uses: actions/setup-go@v5
+        if: steps.plan.outputs.skip == 'false'
+        with:
+          go-version-file: src/go.mod
+          cache: false
+      - uses: pnpm/action-setup@v4
+        if: steps.plan.outputs.skip == 'false'
+        with:
+          package_json_file: src/package.json
+      - uses: actions/setup-node@v4
+        if: steps.plan.outputs.skip == 'false'
+        with:
+          node-version: 22.23.2
+
+      - name: Install, build console, fast checks
+        id: checks
+        if: steps.plan.outputs.skip == 'false'
+        working-directory: src
+        run: |
+          set -euo pipefail
+          pnpm install --frozen-lockfile
+          pnpm build
+          pnpm check-i18n
+          pnpm type-check
+          pnpm test:logic
+
+      - name: Build binaries (same flags as upstream native release)
+        id: build
+        if: steps.plan.outputs.skip == 'false'
+        working-directory: src
+        env:
+          VERSION: ${{ steps.plan.outputs.clay }}
+        run: |
+          set -euo pipefail
+          mkdir -p ../out
+          for arch in amd64 arm64; do
+            CGO_ENABLED=0 GOOS=linux GOARCH=$arch go build -p 2 -trimpath -buildvcs=false -tags timetzdata \
+              -ldflags "-s -w -X github.com/oh-my-cpa/oh-my-cpa/internal/config.BuildVersion=${VERSION}" \
+              -o "../out/oh-my-cpa-linux-$arch" ./cmd/oh-my-cpa
+            go version -m "../out/oh-my-cpa-linux-$arch" | grep -E 'GOARCH|CGO_ENABLED'
+          done
+          grep -c "${VERSION}" ../out/oh-my-cpa-linux-amd64
+          git archive --format=tar.gz --prefix="oh-my-cpa-${VERSION}/" -o "../out/oh-my-cpa-${VERSION}-source.tar.gz" HEAD
+          cd ../out && sha256sum oh-my-cpa-* > sha256sums.txt && cat sha256sums.txt
+
+      - name: Publish release
+        if: steps.plan.outputs.skip == 'false'
+        env:
+          TAG: ${{ steps.plan.outputs.tag }}
+          CLAY: ${{ steps.plan.outputs.clay }}
+        run: |
+          set -euo pipefail
+          printf '上游 [%s](https://github.com/%s/releases/tag/%s) + Clay 软陶主题。\n\n- `oh-my-cpa-linux-amd64` / `oh-my-cpa-linux-arm64`：已内嵌前端的单文件程序\n- `sha256sums.txt`：校验值\n- `*-source.tar.gz`：打完补丁的完整源码\n' "$TAG" "$UPSTREAM" "$TAG" > /tmp/notes.md
+          if gh release view "$CLAY" >/dev/null 2>&1; then
+            gh release upload "$CLAY" out/* --clobber
+          else
+            gh release create "$CLAY" out/* --target clay --title "$CLAY" --notes-file /tmp/notes.md
+          fi
+
+      - name: Push patched source as clay-<tag> (best effort)
+        if: steps.plan.outputs.skip == 'false'
+        continue-on-error: true
+        working-directory: src
+        run: |
+          git push --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/tags/clay-${{ steps.plan.outputs.tag }}"
+
+      - name: Report failure as an issue
+        if: failure() && steps.plan.outputs.skip == 'false'
+        env:
+          TAG: ${{ steps.plan.outputs.tag }}
+          PATCH_OUTCOME: ${{ steps.patch.outcome }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -uo pipefail
+          if [ "$PATCH_OUTCOME" = "failure" ]; then TITLE="软陶主题合并失败：$TAG"; else TITLE="软陶版编译/检查失败：$TAG"; fi
+          { echo "上游版本 \`$TAG\` 自动处理失败，旧的软陶版不受影响，VPS 上没有任何改动。"; echo; echo "运行记录：$RUN_URL"; echo; echo '```'; tail -c 6000 /tmp/patch.log 2>/dev/null; echo '```'; } > /tmp/issue.md
+          if [ -z "$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"$TITLE\" in:title" --json number --jq '.[].number')" ]; then
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body-file /tmp/issue.md
+          fi
