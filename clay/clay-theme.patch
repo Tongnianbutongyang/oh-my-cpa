@@ -231,10 +231,10 @@ index 7e6403e..16d123a 100644
            invalid: 'oauth.callback_invalid_url',
 diff --git a/web/src/theme/clay.css b/web/src/theme/clay.css
 new file mode 100644
-index 0000000..3f14416
+index 0000000..a5bb270
 --- /dev/null
 +++ b/web/src/theme/clay.css
-@@ -0,0 +1,377 @@
+@@ -0,0 +1,394 @@
 +/* ── Clay theme ─────────────────────────────────────────────────────────────
 +   Soft pastel claymorphism. Everything is scoped to the Clay palette, so the other
 +   built-in palettes are untouched. Selectable in Settings → Appearance. */
@@ -612,6 +612,23 @@ index 0000000..3f14416
 +/* Inner fields of an affix/number/picker box never draw their own focus ring */
 +html[data-theme='clay'] :is(.ant-input-affix-wrapper, .ant-input-number, .ant-picker, .ant-select) input:focus { box-shadow: none !important; outline: none !important; }
 +@media (max-width: 480px) { html[data-theme='clay'] .auth-card { padding: 24px 18px !important; } }
++
++/* Segmented stacked vertically (narrow settings rows) or wrapped: a 999px pill turns into a
++   squashed oval, so use a rounded rectangle and keep the thumb inside the padding. */
++html[data-theme='clay'] .ant-segmented-vertical { border-radius: 20px !important; padding: 4px !important; }
++html[data-theme='clay'] .ant-segmented-vertical .ant-segmented-group { position: relative; }
++html[data-theme='clay'] .ant-segmented-vertical .ant-segmented-item,
++html[data-theme='clay'] .ant-segmented-vertical .ant-segmented-thumb { border-radius: 14px !important; }
++html[data-theme='clay'] .ant-segmented-vertical .ant-segmented-thumb {
++  box-sizing: border-box; width: auto !important; left: 0 !important; right: 0 !important; padding: 0 !important;
++}
++html[data-theme='clay'] .ant-segmented-vertical .ant-segmented-item { width: 100%; box-sizing: border-box; }
++html[data-theme='clay'] .ant-segmented:has(.ant-segmented-group[style*='wrap']),
++html[data-theme='clay'] .ant-radio-group:has(> .ant-radio-button-wrapper + .ant-radio-button-wrapper) { max-width: 100%; }
++@media (max-width: 900px) {
++  html[data-theme='clay'] .ant-radio-group { display: inline-flex; flex-wrap: wrap; row-gap: 6px; max-width: 100%; }
++  html[data-theme='clay'] .ant-radio-group .ant-radio-button-wrapper { border-radius: 14px !important; }
++}
 diff --git a/web/src/theme/clayTheme.ts b/web/src/theme/clayTheme.ts
 new file mode 100644
 index 0000000..f5f4273
