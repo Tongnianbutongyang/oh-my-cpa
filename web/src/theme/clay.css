@@ -113,3 +113,134 @@ html[data-theme='clay'] .app-menu .ant-menu-item { margin-inline: 12px !importan
 /* Console's own toggle (CSS-module switch) */
 html[data-theme='clay'] [role='switch'][class*='is-checked'] { background: linear-gradient(135deg, #8f82ea, #f49cb8) !important; border-color: transparent !important; }
 html[data-theme='clay'] [role='switch'] { border-radius: 999px !important; --success: #9b8cf2; }
+
+/* ── Page-level coverage (v2): console surfaces drawn by CSS modules / index.css ─────────── */
+/* Raised clay panels: settings groups, config sections, list frames, stat tiles, store cards… */
+html[data-theme='clay'] :is(
+  .settings-group, .terminal-panel, .data-table:not(.data-table-flush), .log-list, .config-editor-wrap,
+  .payload-rule-card, .payload-collapse > .ant-collapse-item, .config-dirty-bar, .req-token-card, .req-waterfall-box,
+  [class*='_stat-tile_'], .ant-collapse:not(.ant-collapse-ghost), .ant-list-bordered,
+  [class*='_store-card_'], [class*='_installed-row_'], [class*='_rule-card_'], [class*='_config-pages_'],
+  [class*='_changelog-panel_'], [class*='_model-row_'], [class*='_step-card_'], [class*='_provider-tile_'],
+  [class*='_session-strip_'], [class*='_advanced-filters_'], [class*='_drawer-section_'], [class*='_item-card_'],
+  [class*='_code-frame_'], [class*='_composer-frame_'], [class*='_upstream-summary_'],
+  [class*='_session-status-card_'],
+  [class*='_vacuum-space-table_'], [class*='_preview-panel_']
+) {
+  border: 1px solid rgba(255, 255, 255, .75) !important;
+  border-radius: 22px !important;
+  background-color: var(--surface) !important;
+  box-shadow: var(--clay-shadow), var(--clay-inner) !important;
+}
+html[data-theme='clay'] :is(.settings-group, .data-table, .log-list, .config-editor-wrap, [class*='_changelog-panel_'], [class*='_code-frame_']) { overflow: hidden; }
+html[data-theme='clay'] [class*='_stat-tile_'] { border-radius: 20px !important; }
+/* The active filter tile: pastel lavender tint instead of the flat selected fill */
+html[data-theme='clay'] :is([class*='_stat-tile-active_'], [class*='_stat-tile_'][aria-pressed='true']) {
+  background: linear-gradient(150deg, #ece6ff, #fde7ef) !important;
+  box-shadow: var(--clay-shadow), inset 0 1px 0 #fff !important;
+}
+html[data-theme='clay'] .settings-group > :first-child { background: transparent; }
+/* List headers, inner rows */
+html[data-theme='clay'] :is(.data-table-head, .data-table > header, .ant-table-thead > tr > th, .ant-table-thead > tr > td) { background: #fbf4ec !important; }
+html[data-theme='clay'] .ant-table-tbody > tr.ant-table-row:hover > td { background: #f7effa !important; }
+html[data-theme='clay'] .ant-table-wrapper .ant-table-container table > thead > tr:first-child > *:first-child { border-start-start-radius: 22px; }
+html[data-theme='clay'] .ant-table-wrapper .ant-table-container table > thead > tr:first-child > *:last-child { border-start-end-radius: 22px; }
+
+/* Inputs: style the outer box only, never an inner field again (no box-in-box) */
+html[data-theme='clay'] :is(.ant-input-affix-wrapper, .ant-input-group-wrapper, .ant-input-number, .ant-select, .ant-picker, .ant-input-search) :is(.ant-input, .ant-input-number-input, .ant-select-selector, input) {
+  background: transparent !important; box-shadow: none !important; border-radius: 0 !important;
+}
+html[data-theme='clay'] .ant-select .ant-select-selector { border: 0 !important; }
+html[data-theme='clay'] textarea.ant-input { border-radius: 16px !important; }
+html[data-theme='clay'] :is(.ant-input, .ant-input-affix-wrapper, .ant-select, .ant-input-number, .ant-picker):is(:focus, :focus-within, .ant-select-focused) {
+  box-shadow: 0 0 0 3px rgba(143, 130, 234, .22), inset 0 2px 5px rgba(120, 100, 150, .06) !important;
+}
+html[data-theme='clay'] :is(.time-range-field, [class*='_picker-search_']) { border-radius: 14px !important; background: #fffdfa !important; }
+
+/* Tags / chips / count pills: macaron fills */
+html[data-theme='clay'] :is([class*='_count-pill_'], [class*='_prefix-chip_'], [class*='_tab-count_'], [class*='_tier-badge_'], .req-active-chips-bar .ant-tag, [class*='_composer-chip_'], [class*='_suggestion_']) {
+  border-radius: 999px !important;
+}
+html[data-theme='clay'] .ant-tag:not([class*='ant-tag-'][class*='-inverse']) { border-color: transparent; }
+html[data-theme='clay'] .ant-badge-count { box-shadow: 0 0 0 2px #fffaf5; }
+
+/* Tabs & segmented filters */
+html[data-theme='clay'] .ant-tabs-ink-bar { height: 3px !important; border-radius: 999px; background: linear-gradient(90deg, #8f82ea, #f49cb8) !important; }
+html[data-theme='clay'] .ant-tabs-nav::before { border-bottom-color: var(--border-soft) !important; }
+html[data-theme='clay'] .ant-radio-button-wrapper:first-child { border-start-start-radius: 999px; border-end-start-radius: 999px; }
+html[data-theme='clay'] .ant-radio-button-wrapper:last-child { border-start-end-radius: 999px; border-end-end-radius: 999px; }
+html[data-theme='clay'] .ant-checkbox-inner { border-radius: 6px; }
+
+/* Icon-only square buttons become soft round buttons */
+html[data-theme='clay'] .ant-btn-icon-only, html[data-theme='clay'] .ant-btn-circle { border-radius: 999px !important; }
+html[data-theme='clay'] .ant-btn-text:not(:disabled):hover, html[data-theme='clay'] .ant-btn-link:not(:disabled):hover { background: #f3edfb !important; }
+html[data-theme='clay'] .ant-btn-dangerous.ant-btn-primary { background: linear-gradient(135deg, #e9839f, #f4a3b4) !important; }
+html[data-theme='clay'] .ant-btn-primary:disabled { opacity: .55; color: #fff !important; }
+
+/* Drawers, modals, popovers, menus, tooltips */
+html[data-theme='clay'] .ant-drawer-content { border-radius: 26px 0 0 26px !important; background: var(--surface) !important; }
+html[data-theme='clay'] .ant-drawer-left .ant-drawer-content { border-radius: 0 26px 26px 0 !important; }
+html[data-theme='clay'] .ant-drawer-bottom .ant-drawer-content { border-radius: 26px 26px 0 0 !important; }
+html[data-theme='clay'] :is(.ant-drawer-header, .ant-modal-header) { background: transparent !important; border-bottom-color: var(--border-soft) !important; }
+html[data-theme='clay'] .ant-drawer-footer { border-top-color: var(--border-soft) !important; }
+html[data-theme='clay'] .ant-modal-content { background: var(--surface) !important; }
+html[data-theme='clay'] :is(.ant-dropdown-menu-item, .ant-select-item, .ant-menu-submenu-popup .ant-menu-item) { border-radius: 12px !important; }
+html[data-theme='clay'] .ant-tooltip-inner { border-radius: 12px !important; }
+html[data-theme='clay'] .ant-message-notice-content { border-radius: 999px !important; box-shadow: var(--clay-shadow) !important; }
+html[data-theme='clay'] .ant-popconfirm .ant-popover-inner { padding: 14px 16px; }
+html[data-theme='clay'] .ant-alert { border-radius: 18px !important; border: 0 !important; box-shadow: var(--clay-shadow-sm); }
+html[data-theme='clay'] .ant-empty-image { opacity: .8; }
+
+/* Header bar & mobile drawer navigation */
+html[data-theme='clay'] .app-header, html[data-theme='clay'] .ant-layout-header { border-bottom-color: transparent !important; backdrop-filter: blur(8px); }
+html[data-theme='clay'] .ant-drawer .app-menu, html[data-theme='clay'] .ant-drawer .ant-menu { background: transparent !important; }
+
+/* Progress / meters drawn by antd */
+html[data-theme='clay'] .ant-progress-inner, html[data-theme='clay'] .ant-progress-bg { border-radius: 999px !important; }
+html[data-theme='clay'] .ant-progress-inner { background: #efe6f6 !important; }
+
+/* Pagination */
+html[data-theme='clay'] :is(.ant-pagination-item, .ant-pagination-prev .ant-pagination-item-link, .ant-pagination-next .ant-pagination-item-link) { border-radius: 999px !important; }
+html[data-theme='clay'] .ant-pagination-item-active { background: linear-gradient(135deg, #ece6ff, #fde7ef) !important; border-color: transparent !important; }
+
+/* Code & logs: Monaco follows the palette; frame it softly */
+html[data-theme='clay'] .monaco-editor, html[data-theme='clay'] .monaco-editor .overflow-guard { border-radius: 16px; }
+html[data-theme='clay'] :is(pre, .inline-code, [class*='_inline-code_']) { border-radius: 12px; }
+
+/* Firefox scrollbars */
+html[data-theme='clay'] * { scrollbar-color: #e2d6ea transparent; }
+html[data-theme='clay'] *::-webkit-scrollbar-track { background: transparent; }
+
+/* Plugin page frame and login */
+html[data-theme='clay'] [data-plugin-page-frame] { border-radius: 22px; background: var(--surface); box-shadow: var(--clay-shadow-sm); }
+
+/* Status inks: softer macaron-leaning success / warn / danger (still >=3:1 on the cream card) */
+html[data-theme='clay'] { --success: #2f9e7f !important; --warn: #c97a35 !important; --danger: #d4567a !important; }
+/* Notices: tinted soft pill-panel instead of a flat grey bar with an edge */
+html[data-theme='clay'] .omc-notice {
+  border: 0 !important; border-radius: 20px !important;
+  background: linear-gradient(135deg, color-mix(in oklab, var(--notice-tone) 12%, #fffaf5), #fffaf5) !important;
+  box-shadow: var(--clay-shadow-sm), var(--clay-inner) !important;
+}
+html[data-theme='clay'] .omc-notice::before { display: none !important; }
+/* Quota placeholders and other inset wells */
+html[data-theme='clay'] :is([class*='_record-quota_'] [class*='_empty_'], .payload-empty-box, [class*='_dropzone_']) {
+  border-radius: 14px !important; background: #f6eff6 !important; border-color: transparent !important;
+  box-shadow: inset 0 2px 6px rgba(120, 100, 150, .08) !important;
+}
+html[data-theme='clay'] .log-list, html[data-theme='clay'] .req-list, html[data-theme='clay'] [class*='scroll'] { scrollbar-width: thin; }
+html[data-theme='clay'] ::-webkit-scrollbar-thumb { background: #e2d6ea !important; border-radius: 999px; }
+html[data-theme='clay'] ::-webkit-scrollbar-thumb:hover { background: #cfc0e0 !important; }
+/* A list nested inside an already raised panel stays flat: one frame, never a frame in a frame */
+html[data-theme='clay'] :is(.data-table, .settings-group, .ant-card, .ant-drawer, .ant-modal, [class*='_store-card_'], [class*='_drawer-section_']) .ant-table-wrapper .ant-table,
+html[data-theme='clay'] :is(.data-table, .settings-group, .ant-card) :is(.data-table, .settings-group, .ant-card) {
+  box-shadow: none !important; border-color: var(--border-soft) !important;
+}
+html[data-theme='clay'] .data-table .ant-table-wrapper .ant-table { border: 0 !important; border-radius: 0 !important; background: transparent !important; }
+/* Sign-in: the form sits on a raised clay card over the cream gradient */
+html[data-theme='clay'] .auth-shell { background: transparent !important; }
+html[data-theme='clay'] .auth-card {
+  padding: 32px 28px !important; border-radius: 28px !important; background: var(--surface) !important;
+  border: 1px solid rgba(255, 255, 255, .75) !important; box-shadow: var(--clay-shadow), var(--clay-inner) !important;
+}
+@media (max-width: 480px) { html[data-theme='clay'] .auth-card { padding: 24px 18px !important; } }
