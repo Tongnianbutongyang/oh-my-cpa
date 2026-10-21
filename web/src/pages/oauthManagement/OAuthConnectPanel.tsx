@@ -219,8 +219,18 @@ export const OAuthConnectPanel: React.FC<OAuthConnectPanelProps> = ({
                 data-oauth-start={choice.pluginPageRoute ? undefined : choice.id}
                 data-plugin-connect={choice.pluginPageRoute ? choice.id : undefined}
               >
-                {isSuccess ? t('oauth.login_another') : choice.loginLabel}
+                {isSuccess && !choice.pluginPageRoute ? t('oauth.login_another') : choice.loginLabel}
               </Button>
+              {choice.pluginPageRoute && (
+                <Button
+                  loading={session?.starting}
+                  disabled={isWaiting || isDemo}
+                  onClick={() => void sessions.start(choice.id)}
+                  data-oauth-start={choice.id}
+                >
+                  {isSuccess ? t('oauth.login_another') : t('oauth.plugin_request_login')}
+                </Button>
+              )}
             </div>
 
             {hasStarted && (

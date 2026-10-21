@@ -53,6 +53,21 @@ export const ModelUsageDonut = React.memo<ModelUsageDonutProps>(({
   const animate = resolveChartAnimation(isReducedMotion);
   const { style: tokenStyle } = useTokenDisplayStyle();
   const colors = theme.palette;
+  // Clay only: a plump continuous torus (thicker tube) instead of a flat thin ring.
+  // Segments abut flush — no inset/corner-radius gaps — so the ring reads as one clay tube
+  // whose colour changes along its length. Other palettes keep stock proportions.
+  const isClay = theme.id === 'clay';
+  const ringOuter = isClay ? 0.96 : 0.92;
+  const ringInner = isClay ? 0.52 : 0.68;
+  const ringStyle = isClay
+    ? {
+        // No stroke/inset/radius: contiguous arcs on one ring (no sausage gaps).
+        stroke: 'transparent',
+        lineWidth: 0,
+        inset: 0,
+        radius: 0,
+      }
+    : { stroke: colors.surface, lineWidth: 2, radius: ringOuter, innerRadius: ringInner };
 
   const domain = React.useMemo(() => groups.map(seriesDomainKey), [groups]);
   const range = React.useMemo(() => seriesColorRange(theme.palette, groups), [theme.palette, groups]);
@@ -83,7 +98,7 @@ export const ModelUsageDonut = React.memo<ModelUsageDonutProps>(({
     // square box decides the height. A height pinned here would outlive the frame being clamped
     // narrower and leave the ring sitting in the top of a box taller than itself.
     <div
-      className="model-ring"
+      className={isClay ? 'model-ring model-ring--clay' : 'model-ring'}
       role="img"
       aria-label={centerLabel}
     >
@@ -97,8 +112,8 @@ export const ModelUsageDonut = React.memo<ModelUsageDonutProps>(({
               data={data}
               angleField="tokens"
               colorField="series"
-              innerRadius={0.68}
-              radius={0.92}
+              innerRadius={ringInner}
+              radius={ringOuter}
               // No height prop: the drawing takes the box the CSS frame gives it. A fixed height here
               // outranks `autoFit` and pins the canvas to 220px tall while the frame is clamped narrower,
               // which draws an ellipse and drops the readout below the arcs' centre.
@@ -127,7 +142,7 @@ export const ModelUsageDonut = React.memo<ModelUsageDonutProps>(({
               }}
               // A 2px stroke in the card's own colour separates adjacent slices. Without it two neighbouring
               // hues touch directly, which is where a boundary is hardest to find.
-              style={{ stroke: colors.surface, lineWidth: 2, radius: 0.92, innerRadius: 0.68 }}
+              style={ringStyle}
               // A ring with no axes: the coordinate is theta, so an axis would be a line through the middle
               // of the drawing.
               axis={false}
