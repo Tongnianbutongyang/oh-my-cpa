@@ -371,7 +371,7 @@ export function pluginOAuthProviderChoices(
       loginLabel: t(pluginPageRoute ? 'oauth.plugin_open_page' : 'oauth.plugin_login', { name: title }),
       pluginId: plugin.id,
       pluginLogo: pluginOAuthLogoFor(logos, providerId),
-      callback: pluginPageRoute ? undefined : {
+      callback: {
         // These rules become usable only after CPA actually starts a redirect session.
         errorKeys: {
           invalid: 'oauth.callback_invalid_url',

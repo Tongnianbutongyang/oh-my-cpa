@@ -780,6 +780,7 @@ export const ZH_HANT: Readonly<Record<string, string>> = {
   "theme.forest_desc": "深綠背景與明亮植物色調",
   "theme.sandstone": "Sandstone",
   "theme.sandstone_desc": "暖砂淺色背景與青綠色強調色",
+  "oauth.plugin_request_login": "請求登入",
   "theme.clay": "Clay 軟陶",
   "theme.clay_desc": "奶油底色、馬卡龍配色與柔和立體卡片",
   "omc.theme_mode": "主題模式",

@@ -780,6 +780,7 @@ export const MS: Readonly<Record<string, string>> = {
   "theme.forest_desc": "Permukaan hijau dalam dengan aksen botani yang terang",
   "theme.sandstone": "Batu pasir",
   "theme.sandstone_desc": "Permukaan pasir hangat dengan aksen teal",
+  "oauth.plugin_request_login": "Minta log masuk",
   "theme.clay": "Clay",
   "theme.clay_desc": "Permukaan krim, warna pastel makaron dan kad lembut",
   "omc.theme_mode": "Mod tema",

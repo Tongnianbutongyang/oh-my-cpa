@@ -232,7 +232,7 @@ test('auth-provider metadata does not declare a redirect flow, and plugin pages 
   assert.equal(choice.flow, 'plugin');
   assert.equal(choice.pluginPageRoute, '/plugin-pages/key-bridge/0');
   assert.equal(choice.description, 'oauth.plugin_page_hint');
-  assert.equal(choice.callback, undefined, 'a plugin-managed connection must not expose callback submission');
+  assert.ok(choice.callback, 'a plugin page provider can still start a host OAuth sign-in and submit its callback');
   const [pageless] = pluginOAuthProviderChoices([{ ...plugins[0], pages: [] }], t);
   assert.equal(pageless.flow, 'plugin', 'pageless auth providers have no declared login flow either');
   assert.equal(pageless.pluginPageRoute, undefined);

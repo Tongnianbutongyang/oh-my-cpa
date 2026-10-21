@@ -256,7 +256,7 @@ export function useOAuthSessions(
 
   const start = React.useCallback(async (providerId: string) => {
     const choice = choicesRef.current.find((candidate) => candidate.id === providerId);
-    if (!choice || choice.pluginPageRoute) return;
+    if (!choice) return;
     const current = states[providerId];
     if (startInFlightRef.current[providerId] || isOAuthSessionActive(current) || current?.starting) return;
     startInFlightRef.current[providerId] = true;
