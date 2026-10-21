@@ -1,3 +1,16 @@
+diff --git a/scripts/test-oauth-providers.ts b/scripts/test-oauth-providers.ts
+index df28f77..bd10f15 100644
+--- a/scripts/test-oauth-providers.ts
++++ b/scripts/test-oauth-providers.ts
+@@ -232,7 +232,7 @@ test('auth-provider metadata does not declare a redirect flow, and plugin pages
+   assert.equal(choice.flow, 'plugin');
+   assert.equal(choice.pluginPageRoute, '/plugin-pages/key-bridge/0');
+   assert.equal(choice.description, 'oauth.plugin_page_hint');
+-  assert.equal(choice.callback, undefined, 'a plugin-managed connection must not expose callback submission');
++  assert.ok(choice.callback, 'a plugin page provider can still start a host OAuth sign-in and submit its callback');
+   const [pageless] = pluginOAuthProviderChoices([{ ...plugins[0], pages: [] }], t);
+   assert.equal(pageless.flow, 'plugin', 'pageless auth providers have no declared login flow either');
+   assert.equal(pageless.pluginPageRoute, undefined);
 diff --git a/scripts/test-theme-presets.ts b/scripts/test-theme-presets.ts
 index 0d96d8a..2dcbca7 100644
 --- a/scripts/test-theme-presets.ts
@@ -17,7 +30,7 @@ index 0d96d8a..2dcbca7 100644
      assert.equal(definition.mode, mode, `${definition.id} belongs to ${mode}`);
    }
 diff --git a/web/src/i18n/index.tsx b/web/src/i18n/index.tsx
-index 5a0892b..0111dd2 100644
+index 5a0892b..496f093 100644
 --- a/web/src/i18n/index.tsx
 +++ b/web/src/i18n/index.tsx
 @@ -1018,6 +1018,8 @@ const DICT: Record<string, [string, string]> = {
@@ -29,27 +42,40 @@ index 5a0892b..0111dd2 100644
    'omc.language': ['界面语言', 'Language'],
    'omc.scroll_smoothing': ['平滑滚动', 'Smooth scrolling'],
    'omc.scroll_smoothing_desc': ['鼠标滚轮与键盘滚动平滑过渡，不再逐格跳动；“跟随系统”在系统要求减少动态效果时关闭。', 'Wheel and keyboard scrolls glide instead of stepping; Follow system turns this off when the system asks for reduced motion.'],
+@@ -2953,8 +2955,9 @@ const DICT: Record<string, [string, string]> = {
+   'oauth.cancel_failed': ['取消失败：{msg}', 'Cancellation failed: {msg}'],
+   'oauth.plugin_title': ['{name}', '{name}'],
+   'oauth.plugin_hint': ['{name} 的认证方式由插件决定。仅当插件支持交互式登录时才能在此开始授权；API Key 等凭据需通过插件导入。', 'Authentication is defined by {name}. Request authorization here only if the plugin supports interactive sign-in; import API keys and other credentials through the plugin.'],
+-  'oauth.plugin_page_hint': ['请前往 {name} 的插件页面，使用插件提供的方式添加凭据。', 'Open the {name} plugin page to add credentials using its supported authentication methods.'],
++  'oauth.plugin_page_hint': ['可直接点「请求登录」添加账号（登录区域以插件页面的选择为准），或前往 {name} 的插件页面导入凭据。', 'Open the {name} plugin page to add credentials using its supported authentication methods.'],
+   'oauth.plugin_open_page': ['打开插件页面', 'Open plugin page'],
++  'oauth.plugin_request_login': ['请求登录', 'Request sign-in'],
+   'oauth.plugin_login': ['请求 {name} 登录', 'Request {name} sign-in'],
+   'oauth.plugin_tag': ['CPA 插件', 'CPA Plugin'],
+   'oauth.plugin_section_title': ['CPA 插件认证提供方', 'CPA Plugin Auth Providers'],
 diff --git a/web/src/i18n/locales/ms.ts b/web/src/i18n/locales/ms.ts
-index ebd0575..987b8cb 100644
+index ebd0575..58de7dc 100644
 --- a/web/src/i18n/locales/ms.ts
 +++ b/web/src/i18n/locales/ms.ts
-@@ -780,6 +780,8 @@ export const MS: Readonly<Record<string, string>> = {
+@@ -780,6 +780,9 @@ export const MS: Readonly<Record<string, string>> = {
    "theme.forest_desc": "Permukaan hijau dalam dengan aksen botani yang terang",
    "theme.sandstone": "Batu pasir",
    "theme.sandstone_desc": "Permukaan pasir hangat dengan aksen teal",
++  "oauth.plugin_request_login": "Minta log masuk",
 +  "theme.clay": "Clay",
 +  "theme.clay_desc": "Permukaan krim, warna pastel makaron dan kad lembut",
    "omc.theme_mode": "Mod tema",
    "omc.theme_mode_light": "Cerah",
    "omc.theme_mode_dark": "Gelap",
 diff --git a/web/src/i18n/locales/zh-Hant.ts b/web/src/i18n/locales/zh-Hant.ts
-index 25fcee9..334faf6 100644
+index 25fcee9..3dfb8bd 100644
 --- a/web/src/i18n/locales/zh-Hant.ts
 +++ b/web/src/i18n/locales/zh-Hant.ts
-@@ -780,6 +780,8 @@ export const ZH_HANT: Readonly<Record<string, string>> = {
+@@ -780,6 +780,9 @@ export const ZH_HANT: Readonly<Record<string, string>> = {
    "theme.forest_desc": "深綠背景與明亮植物色調",
    "theme.sandstone": "Sandstone",
    "theme.sandstone_desc": "暖砂淺色背景與青綠色強調色",
++  "oauth.plugin_request_login": "請求登入",
 +  "theme.clay": "Clay 軟陶",
 +  "theme.clay_desc": "奶油底色、馬卡龍配色與柔和立體卡片",
    "omc.theme_mode": "主題模式",
@@ -67,6 +93,56 @@ index 6fe314d..0f51369 100644
  import { applyStoredFonts } from './theme/fontLibrary';
  
  // Before the first render, so the first frame is painted in the typeface this browser last
+diff --git a/web/src/pages/oauthManagement/OAuthConnectPanel.tsx b/web/src/pages/oauthManagement/OAuthConnectPanel.tsx
+index 9960c3d..576951d 100644
+--- a/web/src/pages/oauthManagement/OAuthConnectPanel.tsx
++++ b/web/src/pages/oauthManagement/OAuthConnectPanel.tsx
+@@ -219,8 +219,18 @@ export const OAuthConnectPanel: React.FC<OAuthConnectPanelProps> = ({
+                 data-oauth-start={choice.pluginPageRoute ? undefined : choice.id}
+                 data-plugin-connect={choice.pluginPageRoute ? choice.id : undefined}
+               >
+-                {isSuccess ? t('oauth.login_another') : choice.loginLabel}
++                {isSuccess && !choice.pluginPageRoute ? t('oauth.login_another') : choice.loginLabel}
+               </Button>
++              {choice.pluginPageRoute && (
++                <Button
++                  loading={session?.starting}
++                  disabled={isWaiting || isDemo}
++                  onClick={() => void sessions.start(choice.id)}
++                  data-oauth-start={choice.id}
++                >
++                  {isSuccess ? t('oauth.login_another') : t('oauth.plugin_request_login')}
++                </Button>
++              )}
+             </div>
+ 
+             {hasStarted && (
+diff --git a/web/src/pages/oauthManagement/useOAuthSessions.ts b/web/src/pages/oauthManagement/useOAuthSessions.ts
+index 67d773a..f054aca 100644
+--- a/web/src/pages/oauthManagement/useOAuthSessions.ts
++++ b/web/src/pages/oauthManagement/useOAuthSessions.ts
+@@ -256,7 +256,7 @@ export function useOAuthSessions(
+ 
+   const start = React.useCallback(async (providerId: string) => {
+     const choice = choicesRef.current.find((candidate) => candidate.id === providerId);
+-    if (!choice || choice.pluginPageRoute) return;
++    if (!choice) return;
+     const current = states[providerId];
+     if (startInFlightRef.current[providerId] || isOAuthSessionActive(current) || current?.starting) return;
+     startInFlightRef.current[providerId] = true;
+diff --git a/web/src/pages/oauthProviderLogic.ts b/web/src/pages/oauthProviderLogic.ts
+index 7e6403e..16d123a 100644
+--- a/web/src/pages/oauthProviderLogic.ts
++++ b/web/src/pages/oauthProviderLogic.ts
+@@ -371,7 +371,7 @@ export function pluginOAuthProviderChoices(
+       loginLabel: t(pluginPageRoute ? 'oauth.plugin_open_page' : 'oauth.plugin_login', { name: title }),
+       pluginId: plugin.id,
+       pluginLogo: pluginOAuthLogoFor(logos, providerId),
+-      callback: pluginPageRoute ? undefined : {
++      callback: {
+         // These rules become usable only after CPA actually starts a redirect session.
+         errorKeys: {
+           invalid: 'oauth.callback_invalid_url',
 diff --git a/web/src/theme/clay.css b/web/src/theme/clay.css
 new file mode 100644
 index 0000000..c9d29a1
