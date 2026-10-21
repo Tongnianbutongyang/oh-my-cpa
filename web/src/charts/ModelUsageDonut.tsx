@@ -53,18 +53,19 @@ export const ModelUsageDonut = React.memo<ModelUsageDonutProps>(({
   const animate = resolveChartAnimation(isReducedMotion);
   const { style: tokenStyle } = useTokenDisplayStyle();
   const colors = theme.palette;
-  // Clay only: a plump torus (thicker tube, rounded sector caps) instead of a flat thin ring.
-  // Other palettes keep the stock proportions so the default console is unchanged.
+  // Clay only: a plump continuous torus (thicker tube) instead of a flat thin ring.
+  // Segments abut flush — no inset/corner-radius gaps — so the ring reads as one clay tube
+  // whose colour changes along its length. Other palettes keep stock proportions.
   const isClay = theme.id === 'clay';
   const ringOuter = isClay ? 0.96 : 0.92;
   const ringInner = isClay ? 0.52 : 0.68;
   const ringStyle = isClay
     ? {
-        // Soft gaps between arcs; radius is the sector corner radius in px (G2 Pie).
-        stroke: colors.surface,
-        lineWidth: 3,
-        inset: 2.5,
-        radius: 14,
+        // No stroke/inset/radius: contiguous arcs on one ring (no sausage gaps).
+        stroke: 'transparent',
+        lineWidth: 0,
+        inset: 0,
+        radius: 0,
       }
     : { stroke: colors.surface, lineWidth: 2, radius: ringOuter, innerRadius: ringInner };
 
