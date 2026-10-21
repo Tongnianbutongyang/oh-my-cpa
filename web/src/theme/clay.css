@@ -152,7 +152,7 @@ html[data-theme='clay'] :is(.ant-input-affix-wrapper, .ant-input-group-wrapper, 
 }
 html[data-theme='clay'] .ant-select .ant-select-selector { border: 0 !important; }
 html[data-theme='clay'] textarea.ant-input { border-radius: 16px !important; }
-html[data-theme='clay'] :is(.ant-input, .ant-input-affix-wrapper, .ant-select, .ant-input-number, .ant-picker):is(:focus, :focus-within, .ant-select-focused) {
+html[data-theme='clay'] :is(.ant-input:not(:is(.ant-input-affix-wrapper, .ant-input-number, .ant-picker, .ant-select) *), .ant-input-affix-wrapper, .ant-select, .ant-input-number, .ant-picker):is(:focus, :focus-within, .ant-select-focused) {
   box-shadow: 0 0 0 3px rgba(143, 130, 234, .22), inset 0 2px 5px rgba(120, 100, 150, .06) !important;
 }
 html[data-theme='clay'] :is(.time-range-field, [class*='_picker-search_']) { border-radius: 14px !important; background: #fffdfa !important; }
@@ -238,9 +238,16 @@ html[data-theme='clay'] :is(.data-table, .settings-group, .ant-card) :is(.data-t
 }
 html[data-theme='clay'] .data-table .ant-table-wrapper .ant-table { border: 0 !important; border-radius: 0 !important; background: transparent !important; }
 /* Sign-in: the form sits on a raised clay card over the cream gradient */
-html[data-theme='clay'] .auth-shell { background: transparent !important; }
 html[data-theme='clay'] .auth-card {
-  padding: 32px 28px !important; border-radius: 28px !important; background: var(--surface) !important;
-  border: 1px solid rgba(255, 255, 255, .75) !important; box-shadow: var(--clay-shadow), var(--clay-inner) !important;
+  padding: 36px 32px !important; border-radius: 28px !important;
+  background: linear-gradient(160deg, rgba(233, 226, 255, .55), transparent 45%), #fffdfa !important;
+  border: 1px solid rgba(255, 255, 255, .9) !important;
+  box-shadow: 0 24px 48px -16px rgba(122, 104, 160, .38), 0 4px 12px rgba(122, 104, 160, .10), var(--clay-inner) !important;
 }
+html[data-theme='clay'] .auth-shell {
+  background: radial-gradient(700px 420px at 50% 30%, rgba(217, 208, 251, .45), transparent 65%),
+    radial-gradient(600px 380px at 90% 100%, rgba(253, 217, 189, .35), transparent 60%), var(--bg) !important;
+}
+/* Inner fields of an affix/number/picker box never draw their own focus ring */
+html[data-theme='clay'] :is(.ant-input-affix-wrapper, .ant-input-number, .ant-picker, .ant-select) input:focus { box-shadow: none !important; outline: none !important; }
 @media (max-width: 480px) { html[data-theme='clay'] .auth-card { padding: 24px 18px !important; } }
