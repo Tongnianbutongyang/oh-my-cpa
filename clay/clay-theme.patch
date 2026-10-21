@@ -29,6 +29,60 @@ index 0d96d8a..2dcbca7 100644
    for (const definition of builtInPalettesForMode(mode)) {
      assert.equal(definition.mode, mode, `${definition.id} belongs to ${mode}`);
    }
+diff --git a/web/src/charts/ModelUsageDonut.tsx b/web/src/charts/ModelUsageDonut.tsx
+index 38f5f16..466f0ca 100644
+--- a/web/src/charts/ModelUsageDonut.tsx
++++ b/web/src/charts/ModelUsageDonut.tsx
+@@ -53,6 +53,20 @@ export const ModelUsageDonut = React.memo<ModelUsageDonutProps>(({
+   const animate = resolveChartAnimation(isReducedMotion);
+   const { style: tokenStyle } = useTokenDisplayStyle();
+   const colors = theme.palette;
++  // Clay only: a plump torus (thicker tube, rounded sector caps) instead of a flat thin ring.
++  // Other palettes keep the stock proportions so the default console is unchanged.
++  const isClay = theme.id === 'clay';
++  const ringOuter = isClay ? 0.96 : 0.92;
++  const ringInner = isClay ? 0.52 : 0.68;
++  const ringStyle = isClay
++    ? {
++        // Soft gaps between arcs; radius is the sector corner radius in px (G2 Pie).
++        stroke: colors.surface,
++        lineWidth: 3,
++        inset: 2.5,
++        radius: 14,
++      }
++    : { stroke: colors.surface, lineWidth: 2, radius: ringOuter, innerRadius: ringInner };
+ 
+   const domain = React.useMemo(() => groups.map(seriesDomainKey), [groups]);
+   const range = React.useMemo(() => seriesColorRange(theme.palette, groups), [theme.palette, groups]);
+@@ -83,7 +97,7 @@ export const ModelUsageDonut = React.memo<ModelUsageDonutProps>(({
+     // square box decides the height. A height pinned here would outlive the frame being clamped
+     // narrower and leave the ring sitting in the top of a box taller than itself.
+     <div
+-      className="model-ring"
++      className={isClay ? 'model-ring model-ring--clay' : 'model-ring'}
+       role="img"
+       aria-label={centerLabel}
+     >
+@@ -97,8 +111,8 @@ export const ModelUsageDonut = React.memo<ModelUsageDonutProps>(({
+               data={data}
+               angleField="tokens"
+               colorField="series"
+-              innerRadius={0.68}
+-              radius={0.92}
++              innerRadius={ringInner}
++              radius={ringOuter}
+               // No height prop: the drawing takes the box the CSS frame gives it. A fixed height here
+               // outranks `autoFit` and pins the canvas to 220px tall while the frame is clamped narrower,
+               // which draws an ellipse and drops the readout below the arcs' centre.
+@@ -127,7 +141,7 @@ export const ModelUsageDonut = React.memo<ModelUsageDonutProps>(({
+               }}
+               // A 2px stroke in the card's own colour separates adjacent slices. Without it two neighbouring
+               // hues touch directly, which is where a boundary is hardest to find.
+-              style={{ stroke: colors.surface, lineWidth: 2, radius: 0.92, innerRadius: 0.68 }}
++              style={ringStyle}
+               // A ring with no axes: the coordinate is theta, so an axis would be a line through the middle
+               // of the drawing.
+               axis={false}
 diff --git a/web/src/i18n/index.tsx b/web/src/i18n/index.tsx
 index 5a0892b..496f093 100644
 --- a/web/src/i18n/index.tsx
@@ -176,10 +230,10 @@ index 7e6403e..16d123a 100644
            invalid: 'oauth.callback_invalid_url',
 diff --git a/web/src/theme/clay.css b/web/src/theme/clay.css
 new file mode 100644
-index 0000000..a026151
+index 0000000..3f14416
 --- /dev/null
 +++ b/web/src/theme/clay.css
-@@ -0,0 +1,311 @@
+@@ -0,0 +1,377 @@
 +/* ── Clay theme ─────────────────────────────────────────────────────────────
 +   Soft pastel claymorphism. Everything is scoped to the Clay palette, so the other
 +   built-in palettes are untouched. Selectable in Settings → Appearance. */
@@ -434,6 +488,72 @@ index 0000000..a026151
 +/* Header bar & mobile drawer navigation */
 +html[data-theme='clay'] .app-header, html[data-theme='clay'] .ant-layout-header { border-bottom-color: transparent !important; backdrop-filter: blur(8px); }
 +html[data-theme='clay'] .ant-drawer .app-menu, html[data-theme='clay'] .ant-drawer .ant-menu { background: transparent !important; }
++
++/* Model-usage donut: soft clay torus (thicker tube + outer shade + rim highlight) */
++html[data-theme='clay'] .model-ring--clay .model-ring-frame {
++  /* Leave a little air so the canvas drop-shadow is not clipped by the card. */
++  overflow: visible;
++}
++html[data-theme='clay'] .model-ring--clay .model-ring-frame::before {
++  /* Soft outer trough behind the arcs — reads as the underside of a clay tube. */
++  content: "";
++  position: absolute;
++  inset: 1.5%;
++  border-radius: 50%;
++  pointer-events: none;
++  z-index: 0;
++  background:
++    radial-gradient(circle at 50% 42%,
++      transparent 46%,
++      rgba(255, 255, 255, .55) 54%,
++      rgba(255, 255, 255, .08) 60%,
++      rgba(90, 70, 140, .10) 68%,
++      transparent 74%);
++  mix-blend-mode: soft-light;
++}
++html[data-theme='clay'] .model-ring--clay .model-ring-frame::after {
++  /* Specular highlight along the top of the tube, matching --clay-cylinder-shine. */
++  content: "";
++  position: absolute;
++  inset: 0;
++  border-radius: 50%;
++  pointer-events: none;
++  z-index: 2;
++  background:
++    radial-gradient(circle at 35% 28%, rgba(255, 255, 255, .55) 0%, rgba(255, 255, 255, 0) 42%),
++    radial-gradient(circle at 65% 78%, rgba(60, 40, 100, .16) 0%, rgba(60, 40, 100, 0) 46%);
++  -webkit-mask-image: radial-gradient(circle, transparent 46%, #000 52%, #000 74%, transparent 80%);
++  mask-image: radial-gradient(circle, transparent 46%, #000 52%, #000 74%, transparent 80%);
++}
++html[data-theme='clay'] .model-ring--clay .model-ring-frame > [data-chart-source-type] {
++  z-index: 1;
++  /* Soft clay tube volume: outer shade only on the painted arcs, not on the centre label. */
++  filter: drop-shadow(0 10px 14px rgba(90, 70, 140, .30)) drop-shadow(0 2px 3px rgba(90, 70, 140, .18));
++}
++html[data-theme='clay'] .model-ring--clay .model-ring-center {
++  z-index: 3;
++}
++/* Empty-state track: same plump clay tube when there is no traffic */
++html[data-theme='clay'] .model-ring-track {
++  inset: 10% !important;
++  border-width: 22px !important;
++  border-style: solid !important;
++  border-color: #e0d4ea !important;
++  border-radius: 50% !important;
++  box-shadow:
++    var(--clay-trough),
++    inset 0 2px 2px rgba(255, 255, 255, .55),
++    0 6px 12px rgba(90, 70, 140, .18) !important;
++  background:
++    radial-gradient(circle at 35% 30%, rgba(255, 255, 255, .35), transparent 45%);
++  background-clip: padding-box;
++}
++html[data-theme='clay'] .model-usage-swatch {
++  width: 10px !important;
++  height: 10px !important;
++  border-radius: 999px !important;
++  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), 0 1px 2px rgba(90, 70, 140, .18);
++}
 +
 +/* Progress / meters drawn by antd (cylinder track already set above) */
 +html[data-theme='clay'] .ant-progress-inner, html[data-theme='clay'] .ant-progress-bg { border-radius: 999px !important; }
