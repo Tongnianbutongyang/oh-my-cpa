@@ -1,0 +1,394 @@
+/* ── Clay theme ─────────────────────────────────────────────────────────────
+   Soft pastel claymorphism. Everything is scoped to the Clay palette, so the other
+   built-in palettes are untouched. Selectable in Settings → Appearance. */
+html[data-theme='clay'] {
+  --clay-pink: #f2b4c9;
+  --clay-lavender: #c9bdf8;
+  --clay-mint: #9ee0d2;
+  --clay-peach: #f7c8a4;
+  --clay-periwinkle: #b4c7f5;
+  --clay-shadow: 0 16px 32px -12px rgba(90, 72, 130, .36), 0 4px 10px rgba(90, 72, 130, .12);
+  --clay-shadow-sm: 0 8px 16px -6px rgba(90, 72, 130, .34);
+  --clay-inner: inset 0 2px 0 rgba(255, 255, 255, .92), inset 0 -4px 8px rgba(120, 90, 150, .10);
+  --clay-pill-shadow: 0 10px 18px -8px rgba(90, 70, 140, .42), 0 3px 6px rgba(90, 70, 140, .14), inset 0 2px 0 rgba(255,255,255,.95), inset 0 -3px 6px rgba(90, 70, 150, .14);
+  --clay-cylinder-shine: linear-gradient(180deg, rgba(255,255,255,.55) 0%, rgba(255,255,255,.18) 38%, rgba(0,0,0,.04) 68%, rgba(0,0,0,.16) 100%);
+  --clay-trough: inset 0 3px 6px rgba(90, 70, 130, .18), inset 0 -1px 0 rgba(255,255,255,.65);
+  --font-ui: "Nunito", "Varela Round", "M PLUS Rounded 1c", "HarmonyOS Sans SC", "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans CJK SC", "Noto Sans SC", system-ui, sans-serif !important;
+  --radius-xs: 6px;
+  --radius-sm: 12px;
+  --radius-document: 14px;
+  --radius-control: 14px;
+  --radius-surface: 22px;
+  --radius-thread: 22px;
+  background: var(--bg);
+}
+html[data-theme='clay'] body {
+  font-family: var(--font-ui);
+  background:
+    radial-gradient(900px 500px at 100% -10%, rgba(217, 208, 251, .35), transparent 60%),
+    radial-gradient(700px 420px at -10% 110%, rgba(253, 217, 189, .30), transparent 60%),
+    var(--bg);
+  background-attachment: fixed;
+}
+html[data-theme='clay'] .ant-layout,
+html[data-theme='clay'] .ant-layout-content,
+html[data-theme='clay'] .ant-layout-header { background: transparent !important; }
+
+/* Raised clay tiles */
+html[data-theme='clay'] .ant-card,
+html[data-theme='clay'] .dashboard-tile,
+html[data-theme='clay'] .ant-table-wrapper .ant-table,
+html[data-theme='clay'] .theme-preset-card {
+  border: 1px solid rgba(255, 255, 255, .7) !important;
+  border-radius: 26px !important;
+  background: var(--surface) !important;
+  box-shadow: var(--clay-shadow), var(--clay-inner) !important;
+}
+html[data-theme='clay'] .ant-table-wrapper .ant-table-container { border-radius: 26px; overflow: hidden; }
+html[data-theme='clay'] .ant-table-wrapper .ant-table-thead > tr > th { background: #fbf4ec !important; border-bottom-color: var(--border) !important; }
+
+/* Pastel tint per dashboard tile, cycling the macaron set */
+html[data-theme='clay'] .dashboard-tile { position: relative; overflow: hidden; }
+html[data-theme='clay'] .dashboard-tile::before {
+  content: ""; position: absolute; inset: 0 0 auto 0; height: 100%; pointer-events: none;
+  background: linear-gradient(160deg, var(--tile-tint, var(--clay-lavender)) 0%, transparent 55%); opacity: .55;
+}
+html[data-theme='clay'] .dashboard-tile > * { position: relative; }
+html[data-theme='clay'] .dashboard-cell:nth-child(5n+1) > .dashboard-tile { --tile-tint: var(--clay-lavender); }
+html[data-theme='clay'] .dashboard-cell:nth-child(5n+2) > .dashboard-tile { --tile-tint: var(--clay-pink); }
+html[data-theme='clay'] .dashboard-cell:nth-child(5n+3) > .dashboard-tile { --tile-tint: var(--clay-mint); }
+html[data-theme='clay'] .dashboard-cell:nth-child(5n+4) > .dashboard-tile { --tile-tint: var(--clay-peach); }
+html[data-theme='clay'] .dashboard-cell:nth-child(5n+5) > .dashboard-tile { --tile-tint: var(--clay-periwinkle); }
+
+/* Sidebar: floating soft panel, plump capsule navigation */
+html[data-theme='clay'] .app-sider {
+  background: transparent !important;
+}
+html[data-theme='clay'] .app-sider .ant-layout-sider-children {
+  margin: 12px 0 12px 12px; height: calc(100% - 24px);
+  border-radius: 32px; background: var(--surface);
+  box-shadow: var(--clay-shadow), var(--clay-inner);
+}
+html[data-theme='clay'] .app-brand {
+  border-bottom-color: color-mix(in oklab, var(--border) 70%, transparent) !important;
+}
+html[data-theme='clay'] .app-brand-logo,
+html[data-theme='clay'] .app-brand span,
+html[data-theme='clay'] .app-brand {
+  color: #5344b8 !important;
+  filter: none;
+}
+html[data-theme='clay'] .app-menu .ant-menu-item-group-title {
+  color: #736b84 !important; font-weight: 700; letter-spacing: .12em;
+}
+html[data-theme='clay'] .app-menu .ant-menu-item::after, html[data-theme='clay'] .app-menu .ant-menu-item::before { display: none !important; }
+html[data-theme='clay'] .app-menu .ant-menu-item-selected { border-left: 0 !important; }
+html[data-theme='clay'] .app-menu .ant-menu-item {
+  border-radius: 999px !important; font-weight: 650; height: 40px !important; line-height: 40px !important;
+  margin-block: 4px !important; color: #5a536c !important;
+}
+html[data-theme='clay'] .app-menu .ant-menu-item .anticon,
+html[data-theme='clay'] .app-menu .ant-menu-item-icon { color: #5a536c !important; opacity: .92; }
+html[data-theme='clay'] .app-menu .ant-menu-item:hover {
+  color: #2a2438 !important; background: #f3ebf8 !important;
+}
+html[data-theme='clay'] .app-menu .ant-menu-item:hover .anticon,
+html[data-theme='clay'] .app-menu .ant-menu-item:hover .ant-menu-item-icon { color: #2a2438 !important; }
+html[data-theme='clay'] .app-menu .ant-menu-item-selected {
+  background: linear-gradient(145deg, #d4c6ff 0%, #e8b8d4 55%, #f0c4d8 100%) !important;
+  color: #3a2d9a !important; font-weight: 750;
+  box-shadow: var(--clay-pill-shadow) !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255,255,255,.75) !important;
+}
+html[data-theme='clay'] .app-menu .ant-menu-item-selected .anticon,
+html[data-theme='clay'] .app-menu .ant-menu-item-selected .ant-menu-item-icon { color: #3a2d9a !important; opacity: 1; }
+html[data-theme='clay'] .app-menu .ant-menu-item-selected:hover {
+  background: linear-gradient(145deg, #cbb8ff 0%, #e4a9cb 55%, #eeb6d0 100%) !important;
+  color: #322688 !important;
+}
+
+/* Pills */
+html[data-theme='clay'] .ant-btn { border-radius: 999px !important; font-weight: 700; }
+html[data-theme='clay'] .ant-btn-primary { background: linear-gradient(135deg, #6f5fe0, #9b7eec) !important; border: 0 !important; box-shadow: 0 10px 18px -8px rgba(90,70,180,.65), inset 0 1px 0 rgba(255,255,255,.4) !important; }
+html[data-theme='clay'] .ant-btn-default { background: #fffaf5 !important; box-shadow: var(--clay-shadow-sm), var(--clay-inner) !important; }
+html[data-theme='clay'] .ant-tag, html[data-theme='clay'] .tag, html[data-theme='clay'] .status-label {
+  border-radius: 999px !important; padding-inline: 10px;
+}
+html[data-theme='clay'] .ant-segmented { border-radius: 999px; padding: 3px; box-shadow: inset 0 2px 5px rgba(120,100,150,.10); }
+html[data-theme='clay'] .ant-segmented-item, html[data-theme='clay'] .ant-segmented-thumb { border-radius: 999px !important; }
+html[data-theme='clay'] .ant-segmented-item-selected { box-shadow: var(--clay-shadow-sm) !important; }
+
+/* Soft inputs */
+html[data-theme='clay'] .ant-input, html[data-theme='clay'] .ant-input-affix-wrapper,
+html[data-theme='clay'] .ant-select-selector, html[data-theme='clay'] .ant-input-number,
+html[data-theme='clay'] .ant-picker, html[data-theme='clay'] .ant-select {
+  border-radius: 14px !important; background: #fffdfa !important;
+  box-shadow: inset 0 2px 5px rgba(120, 100, 150, .08);
+}
+html[data-theme='clay'] .ant-switch { box-shadow: inset 0 2px 4px rgba(0,0,0,.08); }
+html[data-theme='clay'] .ant-switch.ant-switch-checked, html[data-theme='clay'] .ant-switch.ant-switch-checked:hover:not(.ant-switch-disabled) { background: linear-gradient(135deg, #8f82ea, #f49cb8) !important; }
+
+/* Plump clay cylinders: meters / quota / antd Progress (not the 2px page loader) */
+html[data-theme='clay'] .meter,
+html[data-theme='clay'] .meter-track,
+html[data-theme='clay'] .quota-window-track,
+html[data-theme='clay'] .ant-progress-inner {
+  height: 12px !important;
+  border-radius: 999px !important;
+  background: #e8dced !important;
+  box-shadow: var(--clay-trough) !important;
+  overflow: hidden;
+}
+html[data-theme='clay'] .meter.is-thick { height: 14px !important; }
+html[data-theme='clay'] .meter-fill,
+html[data-theme='clay'] .meter-track span,
+html[data-theme='clay'] .meter-track .meter-fill,
+html[data-theme='clay'] .quota-window-fill,
+html[data-theme='clay'] .ant-progress-bg,
+html[data-theme='clay'] .ant-progress-success-bg {
+  border-radius: 999px !important;
+  /* Keep caller color; layer a height-wise shine for cylinder volume */
+  background-image: var(--clay-cylinder-shine) !important;
+  background-blend-mode: soft-light !important;
+  box-shadow:
+    inset 0 2px 2px rgba(255,255,255,.55),
+    inset 0 -2px 4px rgba(40, 20, 60, .18),
+    0 2px 4px rgba(90, 70, 130, .16) !important;
+}
+html[data-theme='clay'] .legend-dot { border-radius: 999px !important; }
+html[data-theme='clay'] .ant-progress-line .ant-progress-outer { padding-inline-end: 0 !important; }
+html[data-theme='clay'] .ant-progress-bg { height: 12px !important; }
+
+/* Floating layers */
+html[data-theme='clay'] .ant-modal-content, html[data-theme='clay'] .ant-drawer-content,
+html[data-theme='clay'] .ant-dropdown-menu, html[data-theme='clay'] .ant-popover-inner,
+html[data-theme='clay'] .ant-select-dropdown, html[data-theme='clay'] .ant-notification-notice {
+  border-radius: 22px !important; box-shadow: var(--clay-shadow) !important;
+}
+html[data-theme='clay'] *::-webkit-scrollbar-thumb { background: #e2d6ea; border-radius: 999px; }
+html[data-theme='clay'] .app-menu .ant-menu-item { margin-inline: 10px !important; width: calc(100% - 20px) !important; padding-inline: 14px !important; }
+/* Console's own toggle (CSS-module switch) */
+html[data-theme='clay'] [role='switch'][class*='is-checked'] { background: linear-gradient(135deg, #8f82ea, #f49cb8) !important; border-color: transparent !important; }
+html[data-theme='clay'] [role='switch'] { border-radius: 999px !important; --success: #9b8cf2; }
+
+/* ── Page-level coverage (v2): console surfaces drawn by CSS modules / index.css ─────────── */
+/* Raised clay panels: settings groups, config sections, list frames, stat tiles, store cards… */
+html[data-theme='clay'] :is(
+  .settings-group, .terminal-panel, .data-table:not(.data-table-flush), .log-list, .config-editor-wrap,
+  .payload-rule-card, .payload-collapse > .ant-collapse-item, .config-dirty-bar, .req-token-card, .req-waterfall-box,
+  [class*='_stat-tile_'], .ant-collapse:not(.ant-collapse-ghost), .ant-list-bordered,
+  [class*='_store-card_'], [class*='_installed-row_'], [class*='_rule-card_'], [class*='_config-pages_'],
+  [class*='_changelog-panel_'], [class*='_model-row_'], [class*='_step-card_'], [class*='_provider-tile_'],
+  [class*='_session-strip_'], [class*='_advanced-filters_'], [class*='_drawer-section_'], [class*='_item-card_'],
+  [class*='_code-frame_'], [class*='_composer-frame_'], [class*='_upstream-summary_'],
+  [class*='_session-status-card_'],
+  [class*='_vacuum-space-table_'], [class*='_preview-panel_']
+) {
+  border: 1px solid rgba(255, 255, 255, .75) !important;
+  border-radius: 22px !important;
+  background-color: var(--surface) !important;
+  box-shadow: var(--clay-shadow), var(--clay-inner) !important;
+}
+html[data-theme='clay'] :is(.settings-group, .data-table, .log-list, .config-editor-wrap, [class*='_changelog-panel_'], [class*='_code-frame_']) { overflow: hidden; }
+html[data-theme='clay'] [class*='_stat-tile_'] { border-radius: 20px !important; }
+/* The active filter tile: pastel lavender tint instead of the flat selected fill */
+html[data-theme='clay'] :is([class*='_stat-tile-active_'], [class*='_stat-tile_'][aria-pressed='true']) {
+  background: linear-gradient(150deg, #ece6ff, #fde7ef) !important;
+  box-shadow: var(--clay-shadow), inset 0 1px 0 #fff !important;
+}
+html[data-theme='clay'] .settings-group > :first-child { background: transparent; }
+/* List headers, inner rows */
+html[data-theme='clay'] :is(.data-table-head, .data-table > header, .ant-table-thead > tr > th, .ant-table-thead > tr > td) { background: #fbf4ec !important; }
+html[data-theme='clay'] .ant-table-tbody > tr.ant-table-row:hover > td { background: #f7effa !important; }
+html[data-theme='clay'] .ant-table-wrapper .ant-table-container table > thead > tr:first-child > *:first-child { border-start-start-radius: 22px; }
+html[data-theme='clay'] .ant-table-wrapper .ant-table-container table > thead > tr:first-child > *:last-child { border-start-end-radius: 22px; }
+
+/* Inputs: style the outer box only, never an inner field again (no box-in-box) */
+html[data-theme='clay'] :is(.ant-input-affix-wrapper, .ant-input-group-wrapper, .ant-input-number, .ant-select, .ant-picker, .ant-input-search) :is(.ant-input, .ant-input-number-input, .ant-select-selector, input) {
+  background: transparent !important; box-shadow: none !important; border-radius: 0 !important;
+}
+html[data-theme='clay'] .ant-select .ant-select-selector { border: 0 !important; }
+html[data-theme='clay'] textarea.ant-input { border-radius: 16px !important; }
+html[data-theme='clay'] :is(.ant-input:not(:is(.ant-input-affix-wrapper, .ant-input-number, .ant-picker, .ant-select) *), .ant-input-affix-wrapper, .ant-select, .ant-input-number, .ant-picker):is(:focus, :focus-within, .ant-select-focused) {
+  box-shadow: 0 0 0 3px rgba(143, 130, 234, .22), inset 0 2px 5px rgba(120, 100, 150, .06) !important;
+}
+html[data-theme='clay'] :is(.time-range-field, [class*='_picker-search_']) { border-radius: 14px !important; background: #fffdfa !important; }
+
+/* Tags / chips / count pills: macaron fills */
+html[data-theme='clay'] :is([class*='_count-pill_'], [class*='_prefix-chip_'], [class*='_tab-count_'], [class*='_tier-badge_'], .req-active-chips-bar .ant-tag, [class*='_composer-chip_'], [class*='_suggestion_']) {
+  border-radius: 999px !important;
+}
+html[data-theme='clay'] .ant-tag:not([class*='ant-tag-'][class*='-inverse']) { border-color: transparent; }
+html[data-theme='clay'] .ant-badge-count { box-shadow: 0 0 0 2px #fffaf5; }
+
+/* Tabs & segmented filters */
+html[data-theme='clay'] .ant-tabs-ink-bar { height: 3px !important; border-radius: 999px; background: linear-gradient(90deg, #8f82ea, #f49cb8) !important; }
+html[data-theme='clay'] .ant-tabs-nav::before { border-bottom-color: var(--border-soft) !important; }
+html[data-theme='clay'] .ant-radio-button-wrapper:first-child { border-start-start-radius: 999px; border-end-start-radius: 999px; }
+html[data-theme='clay'] .ant-radio-button-wrapper:last-child { border-start-end-radius: 999px; border-end-end-radius: 999px; }
+html[data-theme='clay'] .ant-checkbox-inner { border-radius: 6px; }
+
+/* Icon-only square buttons become soft round buttons */
+html[data-theme='clay'] .ant-btn-icon-only, html[data-theme='clay'] .ant-btn-circle { border-radius: 999px !important; }
+html[data-theme='clay'] .ant-btn-text:not(:disabled):hover, html[data-theme='clay'] .ant-btn-link:not(:disabled):hover { background: #f3edfb !important; }
+html[data-theme='clay'] .ant-btn-dangerous.ant-btn-primary { background: linear-gradient(135deg, #e9839f, #f4a3b4) !important; }
+html[data-theme='clay'] .ant-btn-primary:disabled { opacity: .55; color: #fff !important; }
+
+/* Drawers, modals, popovers, menus, tooltips */
+html[data-theme='clay'] .ant-drawer-content { border-radius: 26px 0 0 26px !important; background: var(--surface) !important; }
+html[data-theme='clay'] .ant-drawer-left .ant-drawer-content { border-radius: 0 26px 26px 0 !important; }
+html[data-theme='clay'] .ant-drawer-bottom .ant-drawer-content { border-radius: 26px 26px 0 0 !important; }
+html[data-theme='clay'] :is(.ant-drawer-header, .ant-modal-header) { background: transparent !important; border-bottom-color: var(--border-soft) !important; }
+html[data-theme='clay'] .ant-drawer-footer { border-top-color: var(--border-soft) !important; }
+html[data-theme='clay'] .ant-modal-content { background: var(--surface) !important; }
+html[data-theme='clay'] :is(.ant-dropdown-menu-item, .ant-select-item, .ant-menu-submenu-popup .ant-menu-item) { border-radius: 12px !important; }
+html[data-theme='clay'] .ant-tooltip-inner { border-radius: 12px !important; }
+html[data-theme='clay'] .ant-message-notice-content { border-radius: 999px !important; box-shadow: var(--clay-shadow) !important; }
+html[data-theme='clay'] .ant-popconfirm .ant-popover-inner { padding: 14px 16px; }
+html[data-theme='clay'] .ant-alert { border-radius: 18px !important; border: 0 !important; box-shadow: var(--clay-shadow-sm); }
+html[data-theme='clay'] .ant-empty-image { opacity: .8; }
+
+/* Header bar & mobile drawer navigation */
+html[data-theme='clay'] .app-header, html[data-theme='clay'] .ant-layout-header { border-bottom-color: transparent !important; backdrop-filter: blur(8px); }
+html[data-theme='clay'] .ant-drawer .app-menu, html[data-theme='clay'] .ant-drawer .ant-menu { background: transparent !important; }
+
+/* Model-usage donut: soft clay torus (thicker tube + outer shade + rim highlight) */
+html[data-theme='clay'] .model-ring--clay .model-ring-frame {
+  /* Leave a little air so the canvas drop-shadow is not clipped by the card. */
+  overflow: visible;
+}
+html[data-theme='clay'] .model-ring--clay .model-ring-frame::before {
+  /* Soft outer trough behind the arcs — reads as the underside of a clay tube. */
+  content: "";
+  position: absolute;
+  inset: 1.5%;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(circle at 50% 42%,
+      transparent 46%,
+      rgba(255, 255, 255, .55) 54%,
+      rgba(255, 255, 255, .08) 60%,
+      rgba(90, 70, 140, .10) 68%,
+      transparent 74%);
+  mix-blend-mode: soft-light;
+}
+html[data-theme='clay'] .model-ring--clay .model-ring-frame::after {
+  /* Specular highlight along the top of the tube, matching --clay-cylinder-shine. */
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 2;
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255, 255, 255, .55) 0%, rgba(255, 255, 255, 0) 42%),
+    radial-gradient(circle at 65% 78%, rgba(60, 40, 100, .16) 0%, rgba(60, 40, 100, 0) 46%);
+  -webkit-mask-image: radial-gradient(circle, transparent 46%, #000 52%, #000 74%, transparent 80%);
+  mask-image: radial-gradient(circle, transparent 46%, #000 52%, #000 74%, transparent 80%);
+}
+html[data-theme='clay'] .model-ring--clay .model-ring-frame > [data-chart-source-type] {
+  z-index: 1;
+  /* Soft clay tube volume: outer shade only on the painted arcs, not on the centre label. */
+  filter: drop-shadow(0 10px 14px rgba(90, 70, 140, .30)) drop-shadow(0 2px 3px rgba(90, 70, 140, .18));
+}
+html[data-theme='clay'] .model-ring--clay .model-ring-center {
+  z-index: 3;
+}
+/* Empty-state track: same plump clay tube when there is no traffic */
+html[data-theme='clay'] .model-ring-track {
+  inset: 10% !important;
+  border-width: 22px !important;
+  border-style: solid !important;
+  border-color: #e0d4ea !important;
+  border-radius: 50% !important;
+  box-shadow:
+    var(--clay-trough),
+    inset 0 2px 2px rgba(255, 255, 255, .55),
+    0 6px 12px rgba(90, 70, 140, .18) !important;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255, 255, 255, .35), transparent 45%);
+  background-clip: padding-box;
+}
+html[data-theme='clay'] .model-usage-swatch {
+  width: 10px !important;
+  height: 10px !important;
+  border-radius: 999px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), 0 1px 2px rgba(90, 70, 140, .18);
+}
+
+/* Progress / meters drawn by antd (cylinder track already set above) */
+html[data-theme='clay'] .ant-progress-inner, html[data-theme='clay'] .ant-progress-bg { border-radius: 999px !important; }
+html[data-theme='clay'] .ant-progress-inner { background: #e8dced !important; box-shadow: var(--clay-trough) !important; }
+
+/* Pagination */
+html[data-theme='clay'] :is(.ant-pagination-item, .ant-pagination-prev .ant-pagination-item-link, .ant-pagination-next .ant-pagination-item-link) { border-radius: 999px !important; }
+html[data-theme='clay'] .ant-pagination-item-active { background: linear-gradient(135deg, #ece6ff, #fde7ef) !important; border-color: transparent !important; }
+
+/* Code & logs: Monaco follows the palette; frame it softly */
+html[data-theme='clay'] .monaco-editor, html[data-theme='clay'] .monaco-editor .overflow-guard { border-radius: 16px; }
+html[data-theme='clay'] :is(pre, .inline-code, [class*='_inline-code_']) { border-radius: 12px; }
+
+/* Firefox scrollbars */
+html[data-theme='clay'] * { scrollbar-color: #e2d6ea transparent; }
+html[data-theme='clay'] *::-webkit-scrollbar-track { background: transparent; }
+
+/* Plugin page frame and login */
+html[data-theme='clay'] [data-plugin-page-frame] { border-radius: 22px; background: var(--surface); box-shadow: var(--clay-shadow-sm); }
+
+/* Status inks: softer macaron-leaning success / warn / danger (still >=3:1 on the cream card) */
+html[data-theme='clay'] { --success: #2f9e7f !important; --warn: #c97a35 !important; --danger: #d4567a !important; }
+/* Notices: tinted soft pill-panel instead of a flat grey bar with an edge */
+html[data-theme='clay'] .omc-notice {
+  border: 0 !important; border-radius: 20px !important;
+  background: linear-gradient(135deg, color-mix(in oklab, var(--notice-tone) 12%, #fffaf5), #fffaf5) !important;
+  box-shadow: var(--clay-shadow-sm), var(--clay-inner) !important;
+}
+html[data-theme='clay'] .omc-notice::before { display: none !important; }
+/* Quota placeholders and other inset wells */
+html[data-theme='clay'] :is([class*='_record-quota_'] [class*='_empty_'], .payload-empty-box, [class*='_dropzone_']) {
+  border-radius: 14px !important; background: #f6eff6 !important; border-color: transparent !important;
+  box-shadow: inset 0 2px 6px rgba(120, 100, 150, .08) !important;
+}
+html[data-theme='clay'] .log-list, html[data-theme='clay'] .req-list, html[data-theme='clay'] [class*='scroll'] { scrollbar-width: thin; }
+html[data-theme='clay'] ::-webkit-scrollbar-thumb { background: #e2d6ea !important; border-radius: 999px; }
+html[data-theme='clay'] ::-webkit-scrollbar-thumb:hover { background: #cfc0e0 !important; }
+/* A list nested inside an already raised panel stays flat: one frame, never a frame in a frame */
+html[data-theme='clay'] :is(.data-table, .settings-group, .ant-card, .ant-drawer, .ant-modal, [class*='_store-card_'], [class*='_drawer-section_']) .ant-table-wrapper .ant-table,
+html[data-theme='clay'] :is(.data-table, .settings-group, .ant-card) :is(.data-table, .settings-group, .ant-card) {
+  box-shadow: none !important; border-color: var(--border-soft) !important;
+}
+html[data-theme='clay'] .data-table .ant-table-wrapper .ant-table { border: 0 !important; border-radius: 0 !important; background: transparent !important; }
+/* Sign-in: the form sits on a raised clay card over the cream gradient */
+html[data-theme='clay'] .auth-card {
+  padding: 36px 32px !important; border-radius: 28px !important;
+  background: linear-gradient(160deg, rgba(233, 226, 255, .55), transparent 45%), #fffdfa !important;
+  border: 1px solid rgba(255, 255, 255, .9) !important;
+  box-shadow: 0 24px 48px -16px rgba(122, 104, 160, .38), 0 4px 12px rgba(122, 104, 160, .10), var(--clay-inner) !important;
+}
+html[data-theme='clay'] .auth-shell {
+  background: radial-gradient(700px 420px at 50% 30%, rgba(217, 208, 251, .45), transparent 65%),
+    radial-gradient(600px 380px at 90% 100%, rgba(253, 217, 189, .35), transparent 60%), var(--bg) !important;
+}
+/* Inner fields of an affix/number/picker box never draw their own focus ring */
+html[data-theme='clay'] :is(.ant-input-affix-wrapper, .ant-input-number, .ant-picker, .ant-select) input:focus { box-shadow: none !important; outline: none !important; }
+@media (max-width: 480px) { html[data-theme='clay'] .auth-card { padding: 24px 18px !important; } }
+
+/* Segmented stacked vertically (narrow settings rows) or wrapped: a 999px pill turns into a
+   squashed oval, so use a rounded rectangle and keep the thumb inside the padding. */
+html[data-theme='clay'] .ant-segmented-vertical { border-radius: 20px !important; padding: 4px !important; }
+html[data-theme='clay'] .ant-segmented-vertical .ant-segmented-group { position: relative; }
+html[data-theme='clay'] .ant-segmented-vertical .ant-segmented-item,
+html[data-theme='clay'] .ant-segmented-vertical .ant-segmented-thumb { border-radius: 14px !important; }
+html[data-theme='clay'] .ant-segmented-vertical .ant-segmented-thumb {
+  box-sizing: border-box; width: auto !important; left: 0 !important; right: 0 !important; padding: 0 !important;
+}
+html[data-theme='clay'] .ant-segmented-vertical .ant-segmented-item { width: 100%; box-sizing: border-box; }
+html[data-theme='clay'] .ant-segmented:has(.ant-segmented-group[style*='wrap']),
+html[data-theme='clay'] .ant-radio-group:has(> .ant-radio-button-wrapper + .ant-radio-button-wrapper) { max-width: 100%; }
+@media (max-width: 900px) {
+  html[data-theme='clay'] .ant-radio-group { display: inline-flex; flex-wrap: wrap; row-gap: 6px; max-width: 100%; }
+  html[data-theme='clay'] .ant-radio-group .ant-radio-button-wrapper { border-radius: 14px !important; }
+}

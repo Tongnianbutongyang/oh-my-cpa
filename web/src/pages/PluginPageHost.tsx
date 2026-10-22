@@ -27,7 +27,10 @@ export const PluginPageHost: React.FC = () => {
   const t = useT();
   const navigate = useNavigate();
   const { pluginId, pageIndex } = useParams();
-  const { themeMode } = useTheme();
+  const { themeMode, theme: resolvedTheme } = useTheme();
+  // The palette id (e.g. `clay`) rides along as `data-omc-palette` for plugin pages that want it.
+  const framePalette = resolvedTheme.id;
+  const latestPalette = React.useRef(framePalette);
   const frameTheme: 'dark' | 'light' = themeMode === 'dark' ? 'dark' : 'light';
   const [reloadCount, setReloadCount] = React.useState(0);
   const [isFrameLoading, setIsFrameLoading] = React.useState(true);
@@ -59,11 +62,13 @@ export const PluginPageHost: React.FC = () => {
     if (!shellRoot) return;
     shellRoot.setAttribute('data-theme', theme);
     shellRoot.style.colorScheme = theme;
+    shellRoot.setAttribute('data-omc-palette', latestPalette.current);
   }, []);
   React.useEffect(() => {
     latestTheme.current = frameTheme;
+    latestPalette.current = framePalette;
     stateFrameTheme(frameTheme);
-  }, [frameTheme, stateFrameTheme]);
+  }, [frameTheme, framePalette, stateFrameTheme]);
 
   React.useEffect(() => {
     setIsFrameLoading(true);

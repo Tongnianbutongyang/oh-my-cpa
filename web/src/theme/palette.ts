@@ -36,7 +36,7 @@ export type ThemeMode = 'dark' | 'light';
 
 export const THEME_MODES: readonly ThemeMode[] = ['dark', 'light'];
 
-export type BuiltInPaletteId = 'omc-dark' | 'omc-light' | 'midnight' | 'porcelain' | 'forest' | 'sandstone';
+export type BuiltInPaletteId = 'omc-dark' | 'omc-light' | 'midnight' | 'porcelain' | 'forest' | 'sandstone' | 'clay';
 
 export const BUILT_IN_PALETTE_IDS: readonly BuiltInPaletteId[] = [
   'omc-dark',
@@ -45,6 +45,7 @@ export const BUILT_IN_PALETTE_IDS: readonly BuiltInPaletteId[] = [
   'porcelain',
   'forest',
   'sandstone',
+  'clay',
 ];
 
 /** What a mode's palette selection can point at: one registered palette, or the operator's own. */
@@ -427,6 +428,9 @@ export interface BuiltInPalette {
   nameKey: string;
   descriptionKey: string;
   core: ThemeCore;
+  /** Optional chart/route overrides for a palette with its own colour story (Clay). */
+  series?: readonly string[];
+  route?: readonly string[];
 }
 
 /**
@@ -539,6 +543,26 @@ export const BUILT_IN_PALETTES: readonly BuiltInPalette[] = [
       accent: '#0f766e',
     },
   },
+  {
+    id: 'clay',
+    mode: 'light',
+    nameKey: 'theme.clay',
+    descriptionKey: 'theme.clay_desc',
+    core: {
+      bg: '#f7f1ea',
+      surface: '#fffaf5',
+      elevated: '#fffdfa',
+      fg: '#322a44',
+      fg2: '#524a66',
+      muted: '#6a6280',
+      meta: '#8a829c',
+      border: '#ece2d8',
+      accent: '#5546bc',
+    },
+    // Macaron hues, deepened just enough to clear the 3:1 graphical-object contrast on the card.
+    series: ['#8f7ef0', '#ed5988', '#349c8c', '#e36a0c', '#528bf0', '#d562c8'],
+    route: ['#8f7ef0', '#349c8c', '#ed5988', '#528bf0', '#e36a0c', '#9488ad'],
+  },
 ];
 
 /** The palettes one mode offers, in the order the settings page lists them. */
@@ -649,7 +673,11 @@ export function resolvedBuiltInPalette(id: BuiltInPaletteId): ResolvedPalette {
   const resolved: ResolvedPalette = {
     id,
     mode: definition.mode,
-    palette: derivePalette(definition.mode, definition.core),
+    palette: {
+      ...derivePalette(definition.mode, definition.core),
+      ...(definition.series ? { series: definition.series } : {}),
+      ...(definition.route ? { route: definition.route } : {}),
+    },
     isCustom: false,
     nameKey: definition.nameKey,
   };

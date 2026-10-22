@@ -1,3 +1,4 @@
+import { applyClayTheme } from './clayTheme';
 import { theme, type ThemeConfig } from 'antd';
 
 import { THREAD_FILL_SHARES, THREAD_RADII, type ResolvedPalette, type ThemePalette } from './palette';
@@ -99,7 +100,12 @@ function inkWash(ink: string, share: number): string {
   return `${ink}${Math.round((share / 100) * 255).toString(16).padStart(2, '0')}`;
 }
 
-export function createThemeConfig(resolved: Pick<ResolvedPalette, 'mode' | 'palette'>): ThemeConfig {
+export function createThemeConfig(resolved: Pick<ResolvedPalette, 'mode' | 'palette'> & { id?: string }): ThemeConfig {
+  const base = createBaseThemeConfig(resolved);
+  return resolved.id === 'clay' ? applyClayTheme(base, resolved.palette) : base;
+}
+
+function createBaseThemeConfig(resolved: Pick<ResolvedPalette, 'mode' | 'palette'>): ThemeConfig {
   const dark = resolved.mode === 'dark';
   const t = resolved.palette;
 

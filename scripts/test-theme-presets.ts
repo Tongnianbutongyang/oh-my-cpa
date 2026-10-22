@@ -68,11 +68,11 @@ const requestRowMinHeight = Number(requestRowRule.match(/min-height:\s*(\d+)px/)
 
 // ── the registry ─────────────────────────────────────────────────────────────
 
-assert.equal(BUILT_IN_PALETTES.length, 6, 'the registry keeps three palettes per mode');
+assert.equal(BUILT_IN_PALETTES.length, 7, 'the registry keeps three palettes per mode, plus Clay');
 assert.equal(new Set(BUILT_IN_PALETTE_IDS).size, BUILT_IN_PALETTE_IDS.length, 'palette ids must be unique');
 assert.equal(new Set(BUILT_IN_PALETTES.map((definition) => definition.id)).size, BUILT_IN_PALETTES.length);
 for (const mode of ['dark', 'light'] as const) {
-  assert.equal(builtInPalettesForMode(mode).length, 3, `${mode} mode offers exactly three palettes`);
+  assert.equal(builtInPalettesForMode(mode).length, mode === 'light' ? 4 : 3, `${mode} mode offers its built-in palettes`);
   for (const definition of builtInPalettesForMode(mode)) {
     assert.equal(definition.mode, mode, `${definition.id} belongs to ${mode}`);
   }
