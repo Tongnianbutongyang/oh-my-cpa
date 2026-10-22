@@ -12,7 +12,7 @@ index df28f77..bd10f15 100644
    assert.equal(pageless.flow, 'plugin', 'pageless auth providers have no declared login flow either');
    assert.equal(pageless.pluginPageRoute, undefined);
 diff --git a/scripts/test-theme-presets.ts b/scripts/test-theme-presets.ts
-index 0d96d8a..2dcbca7 100644
+index 360cb4a..3978616 100644
 --- a/scripts/test-theme-presets.ts
 +++ b/scripts/test-theme-presets.ts
 @@ -68,11 +68,11 @@ const requestRowMinHeight = Number(requestRowRule.match(/min-height:\s*(\d+)px/)
@@ -30,7 +30,7 @@ index 0d96d8a..2dcbca7 100644
      assert.equal(definition.mode, mode, `${definition.id} belongs to ${mode}`);
    }
 diff --git a/web/src/charts/ModelUsageDonut.tsx b/web/src/charts/ModelUsageDonut.tsx
-index 38f5f16..eb0e020 100644
+index 85a3894..eb25653 100644
 --- a/web/src/charts/ModelUsageDonut.tsx
 +++ b/web/src/charts/ModelUsageDonut.tsx
 @@ -53,6 +53,21 @@ export const ModelUsageDonut = React.memo<ModelUsageDonutProps>(({
@@ -51,7 +51,7 @@ index 38f5f16..eb0e020 100644
 +        inset: 0,
 +        radius: 0,
 +      }
-+    : { stroke: colors.surface, lineWidth: 2, radius: ringOuter, innerRadius: ringInner };
++    : { stroke: colors.bg, lineWidth: 2, radius: ringOuter, innerRadius: ringInner };
  
    const domain = React.useMemo(() => groups.map(seriesDomainKey), [groups]);
    const range = React.useMemo(() => seriesColorRange(theme.palette, groups), [theme.palette, groups]);
@@ -79,16 +79,16 @@ index 38f5f16..eb0e020 100644
                }}
                // A 2px stroke in the card's own colour separates adjacent slices. Without it two neighbouring
                // hues touch directly, which is where a boundary is hardest to find.
--              style={{ stroke: colors.surface, lineWidth: 2, radius: 0.92, innerRadius: 0.68 }}
+-              style={{ stroke: colors.bg, lineWidth: 2, radius: 0.92, innerRadius: 0.68 }}
 +              style={ringStyle}
                // A ring with no axes: the coordinate is theta, so an axis would be a line through the middle
                // of the drawing.
                axis={false}
 diff --git a/web/src/i18n/index.tsx b/web/src/i18n/index.tsx
-index 5a0892b..496f093 100644
+index 861cc83..43bd5cb 100644
 --- a/web/src/i18n/index.tsx
 +++ b/web/src/i18n/index.tsx
-@@ -1018,6 +1018,8 @@ const DICT: Record<string, [string, string]> = {
+@@ -1031,6 +1031,8 @@ const DICT: Record<string, [string, string]> = {
    'theme.forest_desc': ['深绿背景与明亮植物色调', 'Deep green surfaces with vivid botanical accents'],
    'theme.sandstone': ['Sandstone', 'Sandstone'],
    'theme.sandstone_desc': ['暖砂浅色背景与青绿色强调色', 'Warm sand surfaces with a teal accent'],
@@ -97,7 +97,7 @@ index 5a0892b..496f093 100644
    'omc.language': ['界面语言', 'Language'],
    'omc.scroll_smoothing': ['平滑滚动', 'Smooth scrolling'],
    'omc.scroll_smoothing_desc': ['鼠标滚轮与键盘滚动平滑过渡，不再逐格跳动；“跟随系统”在系统要求减少动态效果时关闭。', 'Wheel and keyboard scrolls glide instead of stepping; Follow system turns this off when the system asks for reduced motion.'],
-@@ -2953,8 +2955,9 @@ const DICT: Record<string, [string, string]> = {
+@@ -2976,8 +2978,9 @@ const DICT: Record<string, [string, string]> = {
    'oauth.cancel_failed': ['取消失败：{msg}', 'Cancellation failed: {msg}'],
    'oauth.plugin_title': ['{name}', '{name}'],
    'oauth.plugin_hint': ['{name} 的认证方式由插件决定。仅当插件支持交互式登录时才能在此开始授权；API Key 等凭据需通过插件导入。', 'Authentication is defined by {name}. Request authorization here only if the plugin supports interactive sign-in; import API keys and other credentials through the plugin.'],
@@ -109,10 +109,10 @@ index 5a0892b..496f093 100644
    'oauth.plugin_tag': ['CPA 插件', 'CPA Plugin'],
    'oauth.plugin_section_title': ['CPA 插件认证提供方', 'CPA Plugin Auth Providers'],
 diff --git a/web/src/i18n/locales/ms.ts b/web/src/i18n/locales/ms.ts
-index ebd0575..58de7dc 100644
+index 3097324..674846e 100644
 --- a/web/src/i18n/locales/ms.ts
 +++ b/web/src/i18n/locales/ms.ts
-@@ -780,6 +780,9 @@ export const MS: Readonly<Record<string, string>> = {
+@@ -793,6 +793,9 @@ export const MS: Readonly<Record<string, string>> = {
    "theme.forest_desc": "Permukaan hijau dalam dengan aksen botani yang terang",
    "theme.sandstone": "Batu pasir",
    "theme.sandstone_desc": "Permukaan pasir hangat dengan aksen teal",
@@ -123,10 +123,10 @@ index ebd0575..58de7dc 100644
    "omc.theme_mode_light": "Cerah",
    "omc.theme_mode_dark": "Gelap",
 diff --git a/web/src/i18n/locales/zh-Hant.ts b/web/src/i18n/locales/zh-Hant.ts
-index 25fcee9..3dfb8bd 100644
+index 8a2c87c..1531feb 100644
 --- a/web/src/i18n/locales/zh-Hant.ts
 +++ b/web/src/i18n/locales/zh-Hant.ts
-@@ -780,6 +780,9 @@ export const ZH_HANT: Readonly<Record<string, string>> = {
+@@ -793,6 +793,9 @@ export const ZH_HANT: Readonly<Record<string, string>> = {
    "theme.forest_desc": "深綠背景與明亮植物色調",
    "theme.sandstone": "Sandstone",
    "theme.sandstone_desc": "暖砂淺色背景與青綠色強調色",
@@ -687,7 +687,7 @@ index 0000000..f5f4273
 +  };
 +}
 diff --git a/web/src/theme/palette.ts b/web/src/theme/palette.ts
-index b7c12b8..72c7863 100644
+index c99c596..aeeb88f 100644
 --- a/web/src/theme/palette.ts
 +++ b/web/src/theme/palette.ts
 @@ -36,7 +36,7 @@ export type ThemeMode = 'dark' | 'light';
@@ -707,7 +707,7 @@ index b7c12b8..72c7863 100644
  ];
  
  /** What a mode's palette selection can point at: one registered palette, or the operator's own. */
-@@ -391,6 +392,9 @@ export interface BuiltInPalette {
+@@ -427,6 +428,9 @@ export interface BuiltInPalette {
    nameKey: string;
    descriptionKey: string;
    core: ThemeCore;
@@ -717,7 +717,7 @@ index b7c12b8..72c7863 100644
  }
  
  /**
-@@ -503,6 +507,26 @@ export const BUILT_IN_PALETTES: readonly BuiltInPalette[] = [
+@@ -539,6 +543,26 @@ export const BUILT_IN_PALETTES: readonly BuiltInPalette[] = [
        accent: '#0f766e',
      },
    },
@@ -744,7 +744,7 @@ index b7c12b8..72c7863 100644
  ];
  
  /** The palettes one mode offers, in the order the settings page lists them. */
-@@ -613,7 +637,11 @@ export function resolvedBuiltInPalette(id: BuiltInPaletteId): ResolvedPalette {
+@@ -649,7 +673,11 @@ export function resolvedBuiltInPalette(id: BuiltInPaletteId): ResolvedPalette {
    const resolved: ResolvedPalette = {
      id,
      mode: definition.mode,
@@ -758,7 +758,7 @@ index b7c12b8..72c7863 100644
      nameKey: definition.nameKey,
    };
 diff --git a/web/src/theme/themeConfig.ts b/web/src/theme/themeConfig.ts
-index 14865d5..3299699 100644
+index fc4ec0a..7bac655 100644
 --- a/web/src/theme/themeConfig.ts
 +++ b/web/src/theme/themeConfig.ts
 @@ -1,3 +1,4 @@
@@ -766,9 +766,9 @@ index 14865d5..3299699 100644
  import { theme, type ThemeConfig } from 'antd';
  
  import { THREAD_FILL_SHARES, THREAD_RADII, type ResolvedPalette, type ThemePalette } from './palette';
-@@ -94,7 +95,12 @@ export const MOTION_ROUTE_EXIT: MotionToken = { duration: 200, easing: 'cubic-be
- /** A live label repeats this glyph-only sweep; unlike a transition, its period lasts with the work. */
- export const MOTION_LIVE_TEXT: MotionToken = { duration: 900, easing: 'linear' };
+@@ -99,7 +100,12 @@ function inkWash(ink: string, share: number): string {
+   return `${ink}${Math.round((share / 100) * 255).toString(16).padStart(2, '0')}`;
+ }
  
 -export function createThemeConfig(resolved: Pick<ResolvedPalette, 'mode' | 'palette'>): ThemeConfig {
 +export function createThemeConfig(resolved: Pick<ResolvedPalette, 'mode' | 'palette'> & { id?: string }): ThemeConfig {
