@@ -12,10 +12,10 @@ index df28f77..bd10f15 100644
    assert.equal(pageless.flow, 'plugin', 'pageless auth providers have no declared login flow either');
    assert.equal(pageless.pluginPageRoute, undefined);
 diff --git a/scripts/test-theme-presets.ts b/scripts/test-theme-presets.ts
-index 360cb4a..3978616 100644
+index 931de87..d194f08 100644
 --- a/scripts/test-theme-presets.ts
 +++ b/scripts/test-theme-presets.ts
-@@ -68,11 +68,11 @@ const requestRowMinHeight = Number(requestRowRule.match(/min-height:\s*(\d+)px/)
+@@ -52,11 +52,11 @@ import { createThemeConfig, MOTION_LIVE_TEXT, themePaletteCssVariables } from '.
  
  // ── the registry ─────────────────────────────────────────────────────────────
  
@@ -30,112 +30,147 @@ index 360cb4a..3978616 100644
      assert.equal(definition.mode, mode, `${definition.id} belongs to ${mode}`);
    }
 diff --git a/web/src/charts/ModelUsageDonut.tsx b/web/src/charts/ModelUsageDonut.tsx
-index 85a3894..eb25653 100644
+index b0d6a27..684aa3f 100644
 --- a/web/src/charts/ModelUsageDonut.tsx
 +++ b/web/src/charts/ModelUsageDonut.tsx
-@@ -53,6 +53,21 @@ export const ModelUsageDonut = React.memo<ModelUsageDonutProps>(({
-   const animate = resolveChartAnimation(isReducedMotion);
+@@ -25,6 +25,9 @@ export interface ModelUsageDonutProps {
+ export const ModelUsageDonut = React.memo<ModelUsageDonutProps>(({ groups, totalTokens, focusedKey = null, foldedLabel, unnamedLabel, tokenUnitLabel, onFocusGroup, onClearFocus }) => {
+   const { theme } = useTheme();
    const { style: tokenStyle } = useTokenDisplayStyle();
-   const colors = theme.palette;
-+  // Clay only: a plump continuous torus (thicker tube) instead of a flat thin ring.
-+  // Segments abut flush — no inset/corner-radius gaps — so the ring reads as one clay tube
-+  // whose colour changes along its length. Other palettes keep stock proportions.
++  // Clay only: a plump continuous torus (thicker tube) with flush segments, so the ring reads as one
++  // clay tube whose colour changes along its length. Other palettes keep stock proportions.
 +  const isClay = theme.id === 'clay';
-+  const ringOuter = isClay ? 0.96 : 0.92;
-+  const ringInner = isClay ? 0.52 : 0.68;
-+  const ringStyle = isClay
-+    ? {
-+        // No stroke/inset/radius: contiguous arcs on one ring (no sausage gaps).
-+        stroke: 'transparent',
-+        lineWidth: 0,
-+        inset: 0,
-+        radius: 0,
-+      }
-+    : { stroke: colors.bg, lineWidth: 2, radius: ringOuter, innerRadius: ringInner };
- 
-   const domain = React.useMemo(() => groups.map(seriesDomainKey), [groups]);
    const range = React.useMemo(() => seriesColorRange(theme.palette, groups), [theme.palette, groups]);
-@@ -83,7 +98,7 @@ export const ModelUsageDonut = React.memo<ModelUsageDonutProps>(({
-     // square box decides the height. A height pinned here would outlive the frame being clamped
-     // narrower and leave the ring sitting in the top of a box taller than itself.
-     <div
--      className="model-ring"
-+      className={isClay ? 'model-ring model-ring--clay' : 'model-ring'}
-       role="img"
-       aria-label={centerLabel}
-     >
-@@ -97,8 +112,8 @@ export const ModelUsageDonut = React.memo<ModelUsageDonutProps>(({
-               data={data}
-               angleField="tokens"
-               colorField="series"
--              innerRadius={0.68}
--              radius={0.92}
-+              innerRadius={ringInner}
-+              radius={ringOuter}
-               // No height prop: the drawing takes the box the CSS frame gives it. A fixed height here
-               // outranks `autoFit` and pins the canvas to 220px tall while the frame is clamped narrower,
-               // which draws an ellipse and drops the readout below the arcs' centre.
-@@ -127,7 +142,7 @@ export const ModelUsageDonut = React.memo<ModelUsageDonutProps>(({
-               }}
-               // A 2px stroke in the card's own colour separates adjacent slices. Without it two neighbouring
-               // hues touch directly, which is where a boundary is hardest to find.
--              style={{ stroke: colors.bg, lineWidth: 2, radius: 0.92, innerRadius: 0.68 }}
-+              style={ringStyle}
-               // A ring with no axes: the coordinate is theta, so an axis would be a line through the middle
-               // of the drawing.
-               axis={false}
-diff --git a/web/src/i18n/index.tsx b/web/src/i18n/index.tsx
-index 861cc83..43bd5cb 100644
---- a/web/src/i18n/index.tsx
-+++ b/web/src/i18n/index.tsx
-@@ -1031,6 +1031,8 @@ const DICT: Record<string, [string, string]> = {
-   'theme.forest_desc': ['深绿背景与明亮植物色调', 'Deep green surfaces with vivid botanical accents'],
-   'theme.sandstone': ['Sandstone', 'Sandstone'],
-   'theme.sandstone_desc': ['暖砂浅色背景与青绿色强调色', 'Warm sand surfaces with a teal accent'],
-+  'theme.clay': ['Clay 软陶', 'Clay'],
-+  'theme.clay_desc': ['奶油底色、马卡龙配色与柔和立体卡片', 'Cream surfaces, macaron pastels and soft puffy cards'],
-   'omc.language': ['界面语言', 'Language'],
-   'omc.scroll_smoothing': ['平滑滚动', 'Smooth scrolling'],
-   'omc.scroll_smoothing_desc': ['鼠标滚轮与键盘滚动平滑过渡，不再逐格跳动；“跟随系统”在系统要求减少动态效果时关闭。', 'Wheel and keyboard scrolls glide instead of stepping; Follow system turns this off when the system asks for reduced motion.'],
-@@ -2976,8 +2978,9 @@ const DICT: Record<string, [string, string]> = {
-   'oauth.cancel_failed': ['取消失败：{msg}', 'Cancellation failed: {msg}'],
-   'oauth.plugin_title': ['{name}', '{name}'],
-   'oauth.plugin_hint': ['{name} 的认证方式由插件决定。仅当插件支持交互式登录时才能在此开始授权；API Key 等凭据需通过插件导入。', 'Authentication is defined by {name}. Request authorization here only if the plugin supports interactive sign-in; import API keys and other credentials through the plugin.'],
--  'oauth.plugin_page_hint': ['请前往 {name} 的插件页面，使用插件提供的方式添加凭据。', 'Open the {name} plugin page to add credentials using its supported authentication methods.'],
-+  'oauth.plugin_page_hint': ['可直接点「请求登录」添加账号（登录区域以插件页面的选择为准），或前往 {name} 的插件页面导入凭据。', 'Open the {name} plugin page to add credentials using its supported authentication methods.'],
-   'oauth.plugin_open_page': ['打开插件页面', 'Open plugin page'],
-+  'oauth.plugin_request_login': ['请求登录', 'Request sign-in'],
-   'oauth.plugin_login': ['请求 {name} 登录', 'Request {name} sign-in'],
-   'oauth.plugin_tag': ['CPA 插件', 'CPA Plugin'],
-   'oauth.plugin_section_title': ['CPA 插件认证提供方', 'CPA Plugin Auth Providers'],
-diff --git a/web/src/i18n/locales/ms.ts b/web/src/i18n/locales/ms.ts
-index 3097324..674846e 100644
---- a/web/src/i18n/locales/ms.ts
-+++ b/web/src/i18n/locales/ms.ts
-@@ -793,6 +793,9 @@ export const MS: Readonly<Record<string, string>> = {
+   // A zero-token group stays in the ranked list but has no arc to emphasise. Dimming the whole ring
+   // for it would turn a valid zero reading into what looks like a chart-wide disabled state.
+@@ -47,13 +50,13 @@ export const ModelUsageDonut = React.memo<ModelUsageDonutProps>(({ groups, total
+       }]),
+     },
+     series: [{
+-      id: 'model-usage', type: 'pie', data, radius: ['66%', '92%'], padAngle: 1.5,
++      id: 'model-usage', type: 'pie', data, radius: isClay ? ['52%', '96%'] : ['66%', '92%'], padAngle: isClay ? 0 : 1.5,
+       left: 16, right: 16, top: 16, bottom: 16, clockwise: false,
+       label: { show: false }, labelLine: { show: false },
+-      itemStyle: { borderRadius: 3 }, emphasis: { scaleSize: 4, itemStyle: { opacity: 1 } },
++      itemStyle: isClay ? { borderRadius: 0, borderWidth: 0 } : { borderRadius: 3 }, emphasis: { scaleSize: 4, itemStyle: { opacity: 1 } },
+       animationDuration: 0,
+     }],
+-  }), [data, labelOf, tokenStyle, tokenUnitLabel, totalTokens]);
++  }), [data, isClay, labelOf, tokenStyle, tokenUnitLabel, totalTokens]);
+ 
+   const handlers = React.useMemo<EChartHandlers>(() => ({
+     click: (event) => {
+@@ -67,7 +70,7 @@ export const ModelUsageDonut = React.memo<ModelUsageDonutProps>(({ groups, total
+   const share = activeGroup ? formatModelShare(value, totalTokens) : undefined;
+   const centerLabel = `${activeGroup ? `${labelOf(seriesDomainKey(activeGroup))}: ` : ''}${formatTokensFull(value)} ${tokenUnitLabel}${share ? ` · ${share}` : ''}`;
+   return (
+-    <div className="model-ring" role="img" aria-label={centerLabel}>
++    <div className={isClay ? 'model-ring model-ring--clay' : 'model-ring'} role="img" aria-label={centerLabel}>
+       <div className="model-ring-frame">
+         {data.length > 0 && <EChart option={option} label={`${formatTokensFull(totalTokens)} ${tokenUnitLabel}`} handlers={handlers} />}
+         <div className="model-ring-center">
+diff --git a/web/src/i18n/locales/en/oauth.ts b/web/src/i18n/locales/en/oauth.ts
+index 97f7373..6fd189a 100644
+--- a/web/src/i18n/locales/en/oauth.ts
++++ b/web/src/i18n/locales/en/oauth.ts
+@@ -96,6 +96,7 @@ export default {
+   'oauth.plugin_title': '{name}',
+   'oauth.plugin_hint': 'Authentication is defined by {name}. Request authorization here only if the plugin supports interactive sign-in; import API keys and other credentials through the plugin.',
+   'oauth.plugin_page_hint': 'Open the {name} plugin page to add credentials using its supported authentication methods.',
++  'oauth.plugin_request_login': 'Request sign-in',
+   'oauth.plugin_open_page': 'Open plugin page',
+   'oauth.plugin_login': 'Request {name} sign-in',
+   'oauth.plugin_tag': 'CPA Plugin',
+diff --git a/web/src/i18n/locales/en/shell.ts b/web/src/i18n/locales/en/shell.ts
+index 78dab27..c38149c 100644
+--- a/web/src/i18n/locales/en/shell.ts
++++ b/web/src/i18n/locales/en/shell.ts
+@@ -142,6 +142,8 @@ export default {
+   'theme.forest_desc': 'Deep green surfaces with vivid botanical accents',
+   'theme.sandstone': 'Sandstone',
+   'theme.sandstone_desc': 'Warm sand surfaces with a teal accent',
++  'theme.clay': 'Clay',
++  'theme.clay_desc': 'Cream surfaces, macaron pastels and soft puffy cards',
+   'header.logout': 'Sign out',
+   'shell.connected': 'connected',
+   'shell.offline': 'offline',
+diff --git a/web/src/i18n/locales/ms/oauth.ts b/web/src/i18n/locales/ms/oauth.ts
+index 2d00dda..c04842c 100644
+--- a/web/src/i18n/locales/ms/oauth.ts
++++ b/web/src/i18n/locales/ms/oauth.ts
+@@ -96,6 +96,7 @@ export default {
+   "oauth.plugin_title": "{name}",
+   "oauth.plugin_hint": "Kaedah pengesahan ditentukan oleh {name}. Minta kebenaran di sini hanya jika pemalam menyokong log masuk interaktif; import kunci API dan kredensial lain melalui pemalam.",
+   "oauth.plugin_page_hint": "Buka halaman pemalam {name} untuk menambah kredensial menggunakan kaedah pengesahan yang disokong.",
++  "oauth.plugin_request_login": "Minta log masuk",
+   "oauth.plugin_open_page": "Buka halaman pemalam",
+   "oauth.plugin_login": "Minta log masuk {name}",
+   "oauth.plugin_tag": "Pemalam CPA",
+diff --git a/web/src/i18n/locales/ms/shell.ts b/web/src/i18n/locales/ms/shell.ts
+index db6bd80..7b23b11 100644
+--- a/web/src/i18n/locales/ms/shell.ts
++++ b/web/src/i18n/locales/ms/shell.ts
+@@ -142,6 +142,8 @@ export default {
    "theme.forest_desc": "Permukaan hijau dalam dengan aksen botani yang terang",
    "theme.sandstone": "Batu pasir",
    "theme.sandstone_desc": "Permukaan pasir hangat dengan aksen teal",
-+  "oauth.plugin_request_login": "Minta log masuk",
 +  "theme.clay": "Clay",
 +  "theme.clay_desc": "Permukaan krim, warna pastel makaron dan kad lembut",
-   "omc.theme_mode": "Mod tema",
-   "omc.theme_mode_light": "Cerah",
-   "omc.theme_mode_dark": "Gelap",
-diff --git a/web/src/i18n/locales/zh-Hant.ts b/web/src/i18n/locales/zh-Hant.ts
-index 8a2c87c..1531feb 100644
---- a/web/src/i18n/locales/zh-Hant.ts
-+++ b/web/src/i18n/locales/zh-Hant.ts
-@@ -793,6 +793,9 @@ export const ZH_HANT: Readonly<Record<string, string>> = {
+   "header.logout": "Log keluar",
+   "shell.connected": "disambungkan",
+   "shell.offline": "luar talian",
+diff --git a/web/src/i18n/locales/zh-Hant/oauth.ts b/web/src/i18n/locales/zh-Hant/oauth.ts
+index 548ff45..e645c02 100644
+--- a/web/src/i18n/locales/zh-Hant/oauth.ts
++++ b/web/src/i18n/locales/zh-Hant/oauth.ts
+@@ -96,6 +96,7 @@ export default {
+   "oauth.plugin_title": "{name}",
+   "oauth.plugin_hint": "{name} 的驗證方式由外掛決定。僅當外掛支援互動式登入時才能在此開始授權；API Key 等憑證需透過外掛匯入。",
+   "oauth.plugin_page_hint": "請前往 {name} 的外掛頁面，使用外掛提供的方式新增憑證。",
++  "oauth.plugin_request_login": "請求登入",
+   "oauth.plugin_open_page": "開啟外掛頁面",
+   "oauth.plugin_login": "請求 {name} 登入",
+   "oauth.plugin_tag": "CPA 外掛",
+diff --git a/web/src/i18n/locales/zh-Hant/shell.ts b/web/src/i18n/locales/zh-Hant/shell.ts
+index cd66901..d4e6226 100644
+--- a/web/src/i18n/locales/zh-Hant/shell.ts
++++ b/web/src/i18n/locales/zh-Hant/shell.ts
+@@ -142,6 +142,8 @@ export default {
    "theme.forest_desc": "深綠背景與明亮植物色調",
    "theme.sandstone": "Sandstone",
    "theme.sandstone_desc": "暖砂淺色背景與青綠色強調色",
-+  "oauth.plugin_request_login": "請求登入",
 +  "theme.clay": "Clay 軟陶",
 +  "theme.clay_desc": "奶油底色、馬卡龍配色與柔和立體卡片",
-   "omc.theme_mode": "主題模式",
-   "omc.theme_mode_light": "淺色",
-   "omc.theme_mode_dark": "暗色",
+   "header.logout": "退出",
+   "shell.connected": "已連線",
+   "shell.offline": "離線",
+diff --git a/web/src/i18n/locales/zh/oauth.ts b/web/src/i18n/locales/zh/oauth.ts
+index c790b8a..127bbf8 100644
+--- a/web/src/i18n/locales/zh/oauth.ts
++++ b/web/src/i18n/locales/zh/oauth.ts
+@@ -92,7 +92,8 @@ export default {
+   'oauth.cancel_failed': '取消失败：{msg}',
+   'oauth.plugin_title': '{name}',
+   'oauth.plugin_hint': '{name} 的认证方式由插件决定。仅当插件支持交互式登录时才能在此开始授权；API Key 等凭据需通过插件导入。',
+-  'oauth.plugin_page_hint': '请前往 {name} 的插件页面，使用插件提供的方式添加凭据。',
++  'oauth.plugin_page_hint': '可直接点「请求登录」添加账号（登录区域以插件页面的选择为准），或前往 {name} 的插件页面导入凭据。',
++  'oauth.plugin_request_login': '请求登录',
+   'oauth.plugin_open_page': '打开插件页面',
+   'oauth.plugin_login': '请求 {name} 登录',
+   'oauth.plugin_tag': 'CPA 插件',
+diff --git a/web/src/i18n/locales/zh/shell.ts b/web/src/i18n/locales/zh/shell.ts
+index b191873..b403f33 100644
+--- a/web/src/i18n/locales/zh/shell.ts
++++ b/web/src/i18n/locales/zh/shell.ts
+@@ -139,6 +139,8 @@ export default {
+   'theme.forest_desc': '深绿背景与明亮植物色调',
+   'theme.sandstone': 'Sandstone',
+   'theme.sandstone_desc': '暖砂浅色背景与青绿色强调色',
++  'theme.clay': 'Clay 软陶',
++  'theme.clay_desc': '奶油底色、马卡龙配色与柔和立体卡片',
+   'header.logout': '退出',
+   'shell.connected': '已连接',
+   'shell.offline': '离线',
 diff --git a/web/src/main.tsx b/web/src/main.tsx
 index 6fe314d..0f51369 100644
 --- a/web/src/main.tsx
@@ -149,10 +184,10 @@ index 6fe314d..0f51369 100644
  
  // Before the first render, so the first frame is painted in the typeface this browser last
 diff --git a/web/src/pages/PluginPageHost.tsx b/web/src/pages/PluginPageHost.tsx
-index f5a4897..494f2a4 100644
+index 088e637..775f947 100644
 --- a/web/src/pages/PluginPageHost.tsx
 +++ b/web/src/pages/PluginPageHost.tsx
-@@ -27,7 +27,10 @@ export const PluginPageHost: React.FC = () => {
+@@ -28,7 +28,10 @@ export const PluginPageHost: React.FC = () => {
    const t = useT();
    const navigate = useNavigate();
    const { pluginId, pageIndex } = useParams();
@@ -163,8 +198,8 @@ index f5a4897..494f2a4 100644
 +  const latestPalette = React.useRef(framePalette);
    const frameTheme: 'dark' | 'light' = themeMode === 'dark' ? 'dark' : 'light';
    const [reloadCount, setReloadCount] = React.useState(0);
-   const [isFrameLoading, setIsFrameLoading] = React.useState(true);
-@@ -59,11 +62,13 @@ export const PluginPageHost: React.FC = () => {
+   const [frameState, setFrameState] = React.useState<'loading' | 'ready' | 'failed'>('loading');
+@@ -52,11 +55,13 @@ export const PluginPageHost: React.FC = () => {
      if (!shellRoot) return;
      shellRoot.setAttribute('data-theme', theme);
      shellRoot.style.colorScheme = theme;
@@ -178,23 +213,28 @@ index f5a4897..494f2a4 100644
 +  }, [frameTheme, framePalette, stateFrameTheme]);
  
    React.useEffect(() => {
-     setIsFrameLoading(true);
+     setFrameState('loading');
 diff --git a/web/src/pages/oauthManagement/OAuthConnectPanel.tsx b/web/src/pages/oauthManagement/OAuthConnectPanel.tsx
-index 9960c3d..576951d 100644
+index 722d026..fa9ab2e 100644
 --- a/web/src/pages/oauthManagement/OAuthConnectPanel.tsx
 +++ b/web/src/pages/oauthManagement/OAuthConnectPanel.tsx
-@@ -219,8 +219,18 @@ export const OAuthConnectPanel: React.FC<OAuthConnectPanelProps> = ({
+@@ -260,13 +260,23 @@ export const OAuthConnectPanel: React.FC<OAuthConnectPanelProps> = ({
                  data-oauth-start={choice.pluginPageRoute ? undefined : choice.id}
                  data-plugin-connect={choice.pluginPageRoute ? choice.id : undefined}
                >
 -                {isSuccess ? t('oauth.login_another') : choice.loginLabel}
 +                {isSuccess && !choice.pluginPageRoute ? t('oauth.login_another') : choice.loginLabel}
                </Button>
+               {isStartBlocked && (
+                 <Button type="link" data-oauth-default-route onClick={useDefaultRoute}>
+                   {t('oauth.use_default_route')}
+                 </Button>
+               )}
 +              {choice.pluginPageRoute && (
 +                <Button
 +                  loading={session?.starting}
-+                  disabled={isWaiting || isDemo}
-+                  onClick={() => void sessions.start(choice.id)}
++                  disabled={isWaiting || isDemo || isStartBlocked}
++                  onClick={startAuthorization}
 +                  data-oauth-start={choice.id}
 +                >
 +                  {isSuccess ? t('oauth.login_another') : t('oauth.plugin_request_login')}
@@ -204,23 +244,23 @@ index 9960c3d..576951d 100644
  
              {hasStarted && (
 diff --git a/web/src/pages/oauthManagement/useOAuthSessions.ts b/web/src/pages/oauthManagement/useOAuthSessions.ts
-index 67d773a..f054aca 100644
+index 5cbfd27..fd30723 100644
 --- a/web/src/pages/oauthManagement/useOAuthSessions.ts
 +++ b/web/src/pages/oauthManagement/useOAuthSessions.ts
-@@ -256,7 +256,7 @@ export function useOAuthSessions(
- 
-   const start = React.useCallback(async (providerId: string) => {
+@@ -269,7 +269,7 @@ export function useOAuthSessions(
+     isDefaultRouteConfirmed: boolean,
+   ) => {
      const choice = choicesRef.current.find((candidate) => candidate.id === providerId);
 -    if (!choice || choice.pluginPageRoute) return;
 +    if (!choice) return;
      const current = states[providerId];
      if (startInFlightRef.current[providerId] || isOAuthSessionActive(current) || current?.starting) return;
-     startInFlightRef.current[providerId] = true;
+     if (current?.requiresProxyReentry && !proxyUrl?.trim() && !isDefaultRouteConfirmed) return;
 diff --git a/web/src/pages/oauthProviderLogic.ts b/web/src/pages/oauthProviderLogic.ts
-index 7e6403e..16d123a 100644
+index f3b0887..a6d7d4f 100644
 --- a/web/src/pages/oauthProviderLogic.ts
 +++ b/web/src/pages/oauthProviderLogic.ts
-@@ -371,7 +371,7 @@ export function pluginOAuthProviderChoices(
+@@ -390,7 +390,7 @@ export function pluginOAuthProviderChoices(
        loginLabel: t(pluginPageRoute ? 'oauth.plugin_open_page' : 'oauth.plugin_login', { name: title }),
        pluginId: plugin.id,
        pluginLogo: pluginOAuthLogoFor(logos, providerId),
@@ -687,10 +727,10 @@ index 0000000..f5f4273
 +  };
 +}
 diff --git a/web/src/theme/palette.ts b/web/src/theme/palette.ts
-index c99c596..aeeb88f 100644
+index 4cea195..9a6c897 100644
 --- a/web/src/theme/palette.ts
 +++ b/web/src/theme/palette.ts
-@@ -36,7 +36,7 @@ export type ThemeMode = 'dark' | 'light';
+@@ -37,7 +37,7 @@ export type ThemeMode = 'dark' | 'light';
  
  export const THEME_MODES: readonly ThemeMode[] = ['dark', 'light'];
  
@@ -699,7 +739,7 @@ index c99c596..aeeb88f 100644
  
  export const BUILT_IN_PALETTE_IDS: readonly BuiltInPaletteId[] = [
    'omc-dark',
-@@ -45,6 +45,7 @@ export const BUILT_IN_PALETTE_IDS: readonly BuiltInPaletteId[] = [
+@@ -46,6 +46,7 @@ export const BUILT_IN_PALETTE_IDS: readonly BuiltInPaletteId[] = [
    'porcelain',
    'forest',
    'sandstone',
@@ -707,9 +747,9 @@ index c99c596..aeeb88f 100644
  ];
  
  /** What a mode's palette selection can point at: one registered palette, or the operator's own. */
-@@ -427,6 +428,9 @@ export interface BuiltInPalette {
-   nameKey: string;
-   descriptionKey: string;
+@@ -428,6 +429,9 @@ export interface BuiltInPalette {
+   nameKey: MessageKey;
+   descriptionKey: MessageKey;
    core: ThemeCore;
 +  /** Optional chart/route overrides for a palette with its own colour story (Clay). */
 +  series?: readonly string[];
@@ -717,7 +757,7 @@ index c99c596..aeeb88f 100644
  }
  
  /**
-@@ -539,6 +543,26 @@ export const BUILT_IN_PALETTES: readonly BuiltInPalette[] = [
+@@ -540,6 +544,26 @@ export const BUILT_IN_PALETTES: readonly BuiltInPalette[] = [
        accent: '#0f766e',
      },
    },
@@ -744,7 +784,7 @@ index c99c596..aeeb88f 100644
  ];
  
  /** The palettes one mode offers, in the order the settings page lists them. */
-@@ -649,7 +673,11 @@ export function resolvedBuiltInPalette(id: BuiltInPaletteId): ResolvedPalette {
+@@ -650,7 +674,11 @@ export function resolvedBuiltInPalette(id: BuiltInPaletteId): ResolvedPalette {
    const resolved: ResolvedPalette = {
      id,
      mode: definition.mode,
@@ -758,7 +798,7 @@ index c99c596..aeeb88f 100644
      nameKey: definition.nameKey,
    };
 diff --git a/web/src/theme/themeConfig.ts b/web/src/theme/themeConfig.ts
-index fc4ec0a..7bac655 100644
+index dfc13b2..fc77b89 100644
 --- a/web/src/theme/themeConfig.ts
 +++ b/web/src/theme/themeConfig.ts
 @@ -1,3 +1,4 @@
@@ -766,7 +806,7 @@ index fc4ec0a..7bac655 100644
  import { theme, type ThemeConfig } from 'antd';
  
  import { THREAD_FILL_SHARES, THREAD_RADII, type ResolvedPalette, type ThemePalette } from './palette';
-@@ -99,7 +100,12 @@ function inkWash(ink: string, share: number): string {
+@@ -102,7 +103,12 @@ function inkWash(ink: string, share: number): string {
    return `${ink}${Math.round((share / 100) * 255).toString(16).padStart(2, '0')}`;
  }
  
