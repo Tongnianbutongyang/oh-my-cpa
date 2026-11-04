@@ -17,10 +17,10 @@ index 7c03ddee..73f6df0d 100644
    assert.equal(pageless.flow, 'plugin', 'pageless auth providers have no declared login flow either');
    assert.equal(pageless.pluginPageRoute, undefined);
 diff --git a/scripts/test-theme-presets.ts b/scripts/test-theme-presets.ts
-index 20b753e0..6ac1c36d 100644
+index 20b753e0..1d8b14a6 100644
 --- a/scripts/test-theme-presets.ts
 +++ b/scripts/test-theme-presets.ts
-@@ -56,14 +56,14 @@ import { test } from 'vitest';
+@@ -56,11 +56,11 @@ import { test } from 'vitest';
  test('theme presets', () => {
    // ── the registry ─────────────────────────────────────────────────────────────
  
@@ -33,11 +33,7 @@ index 20b753e0..6ac1c36d 100644
 +    assert.equal(builtInPalettesForMode(mode).length, mode === 'light' ? 4 : 3, `${mode} mode offers its built-in palettes`);
      for (const definition of builtInPalettesForMode(mode)) {
        assert.equal(definition.mode, mode, `${definition.id} belongs to ${mode}`);
--    }
-+    
-   }
-   // A palette id is never also a mode name: `parseThemePreferences` would otherwise have to guess
-   // whether a stored `"dark"` meant the mode or a palette.
+     }
 diff --git a/web/src/charts/ModelUsageDonut.tsx b/web/src/charts/ModelUsageDonut.tsx
 index b0d6a27b..684aa3ff 100644
 --- a/web/src/charts/ModelUsageDonut.tsx
