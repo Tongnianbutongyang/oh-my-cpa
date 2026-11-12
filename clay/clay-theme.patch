@@ -1,39 +1,16 @@
-diff --git a/scripts/test-oauth-providers.ts b/scripts/test-oauth-providers.ts
-index 7c03ddee..73f6df0d 100644
---- a/scripts/test-oauth-providers.ts
-+++ b/scripts/test-oauth-providers.ts
-@@ -325,11 +325,11 @@ test('auth-provider metadata does not declare a redirect flow, and plugin pages
-   assert.equal(choice.flow, 'plugin');
-   assert.equal(choice.pluginPageRoute, '/plugin-pages/key-bridge/0');
-   assert.equal(choice.description, 'oauth.plugin_page_hint');
--  assert.equal(choice.callback, undefined, 'a plugin-managed connection must not expose callback submission');
-+  assert.ok(choice.callback, 'a plugin page provider can still start a host OAuth sign-in and submit its callback');
-   const secondary = pluginOAuthProviderChoices(plugins, t)[1];
-   assert.equal(secondary.id, 'key-service-secondary');
-   assert.equal(secondary.pluginPageRoute, choice.pluginPageRoute);
--  assert.equal(secondary.callback, undefined);
-+  assert.ok(secondary.callback, 'secondary plugin page providers also keep host callback submission');
-   const [pageless] = pluginOAuthProviderChoices([{ ...plugins[0], pages: [] }], t);
-   assert.equal(pageless.flow, 'plugin', 'pageless auth providers have no declared login flow either');
-   assert.equal(pageless.pluginPageRoute, undefined);
-diff --git a/scripts/test-theme-presets.ts b/scripts/test-theme-presets.ts
-index 20b753e0..1d8b14a6 100644
---- a/scripts/test-theme-presets.ts
-+++ b/scripts/test-theme-presets.ts
-@@ -56,11 +56,11 @@ import { test } from 'vitest';
- test('theme presets', () => {
-   // ── the registry ─────────────────────────────────────────────────────────────
- 
--  assert.equal(BUILT_IN_PALETTES.length, 6, 'the registry keeps three palettes per mode');
-+  assert.equal(BUILT_IN_PALETTES.length, 7, 'the registry keeps three palettes per mode, plus Clay');
-   assert.equal(new Set(BUILT_IN_PALETTE_IDS).size, BUILT_IN_PALETTE_IDS.length, 'palette ids must be unique');
-   assert.equal(new Set(BUILT_IN_PALETTES.map((definition) => definition.id)).size, BUILT_IN_PALETTES.length);
-   for (const mode of ['dark', 'light'] as const) {
--    assert.equal(builtInPalettesForMode(mode).length, 3, `${mode} mode offers exactly three palettes`);
-+    assert.equal(builtInPalettesForMode(mode).length, mode === 'light' ? 4 : 3, `${mode} mode offers its built-in palettes`);
-     for (const definition of builtInPalettesForMode(mode)) {
-       assert.equal(definition.mode, mode, `${definition.id} belongs to ${mode}`);
-     }
+diff --git a/web/index.html b/web/index.html
+index 862e9a12..0ee2223e 100644
+--- a/web/index.html
++++ b/web/index.html
+@@ -23,7 +23,7 @@
+         // added to that registry belongs here too, and the boot test answers the same values.
+         var legacyPaletteModes = {
+           'omc-dark': 'dark', pewter: 'dark', forest: 'dark', midnight: 'dark',
+-          'omc-light': 'light', fog: 'light', sandstone: 'light', porcelain: 'light'
++          'omc-light': 'light', fog: 'light', sandstone: 'light', clay: 'light', porcelain: 'light'
+         };
+         try {
+           var stored = window.localStorage.getItem('omc-theme');
 diff --git a/web/src/charts/ModelUsageDonut.tsx b/web/src/charts/ModelUsageDonut.tsx
 index b0d6a27b..684aa3ff 100644
 --- a/web/src/charts/ModelUsageDonut.tsx
@@ -74,23 +51,11 @@ index b0d6a27b..684aa3ff 100644
        <div className="model-ring-frame">
          {data.length > 0 && <EChart option={option} label={`${formatTokensFull(totalTokens)} ${tokenUnitLabel}`} handlers={handlers} />}
          <div className="model-ring-center">
-diff --git a/web/src/i18n/locales/en/oauth.ts b/web/src/i18n/locales/en/oauth.ts
-index afda4fce..69400e6f 100644
---- a/web/src/i18n/locales/en/oauth.ts
-+++ b/web/src/i18n/locales/en/oauth.ts
-@@ -141,6 +141,7 @@ export default {
-   'oauth.plugin_title': '{name}',
-   'oauth.plugin_hint': 'Authentication for {name} is managed by its plugin; interactive flows can be started here.',
-   'oauth.plugin_page_hint': 'Open the {name} plugin page to add credentials using its supported authentication methods.',
-+  'oauth.plugin_request_login': 'Request sign-in',
-   'oauth.plugin_open_page': 'Open plugin page',
-   'oauth.plugin_login': 'Request {name} sign-in',
-   'oauth.plugin_tag': 'CPA Plugin',
 diff --git a/web/src/i18n/locales/en/shell.ts b/web/src/i18n/locales/en/shell.ts
-index 1cb7813d..26c1112c 100644
+index 643b601f..096017e0 100644
 --- a/web/src/i18n/locales/en/shell.ts
 +++ b/web/src/i18n/locales/en/shell.ts
-@@ -145,6 +145,8 @@ export default {
+@@ -148,6 +148,8 @@ export default {
    'theme.forest_desc': 'Deep green surfaces with vivid botanical accents',
    'theme.sandstone': 'Sandstone',
    'theme.sandstone_desc': 'Warm sand surfaces with a teal accent',
@@ -99,23 +64,11 @@ index 1cb7813d..26c1112c 100644
    'header.logout': 'Sign out',
    'shell.cpa_management_disabled_title': 'CPA\'s Management API is off',
    'shell.cpa_management_disabled_desc': 'CLIProxyAPI has no management key configured; Oh My CPA cannot access management APIs.',
-diff --git a/web/src/i18n/locales/ms/oauth.ts b/web/src/i18n/locales/ms/oauth.ts
-index e4c75bec..f2b823bc 100644
---- a/web/src/i18n/locales/ms/oauth.ts
-+++ b/web/src/i18n/locales/ms/oauth.ts
-@@ -141,6 +141,7 @@ export default {
-   "oauth.plugin_title": "{name}",
-   "oauth.plugin_hint": "Pengesahan untuk {name} diuruskan oleh pemalamnya; aliran interaktif boleh dimulakan di sini.",
-   "oauth.plugin_page_hint": "Buka halaman pemalam {name} untuk menambah kredensial menggunakan kaedah pengesahan yang disokong.",
-+  "oauth.plugin_request_login": "Minta log masuk",
-   "oauth.plugin_open_page": "Buka halaman pemalam",
-   "oauth.plugin_login": "Minta log masuk {name}",
-   "oauth.plugin_tag": "Pemalam CPA",
 diff --git a/web/src/i18n/locales/ms/shell.ts b/web/src/i18n/locales/ms/shell.ts
-index ed6a6a6f..733ff24f 100644
+index 31f9bc16..3bc90a9a 100644
 --- a/web/src/i18n/locales/ms/shell.ts
 +++ b/web/src/i18n/locales/ms/shell.ts
-@@ -145,6 +145,8 @@ export default {
+@@ -148,6 +148,8 @@ export default {
    "theme.forest_desc": "Permukaan hijau dalam dengan aksen botani yang terang",
    "theme.sandstone": "Batu pasir",
    "theme.sandstone_desc": "Permukaan pasir hangat dengan aksen teal",
@@ -124,23 +77,11 @@ index ed6a6a6f..733ff24f 100644
    "header.logout": "Log keluar",
    "shell.cpa_management_disabled_title": "API Pengurusan CPA dimatikan",
    "shell.cpa_management_disabled_desc": "CLIProxyAPI tiada kunci pengurusan yang dikonfigurasikan; Oh My CPA tidak dapat mengakses API pengurusan.",
-diff --git a/web/src/i18n/locales/zh-Hant/oauth.ts b/web/src/i18n/locales/zh-Hant/oauth.ts
-index 16c68578..cb92b692 100644
---- a/web/src/i18n/locales/zh-Hant/oauth.ts
-+++ b/web/src/i18n/locales/zh-Hant/oauth.ts
-@@ -141,6 +141,7 @@ export default {
-   "oauth.plugin_title": "{name}",
-   "oauth.plugin_hint": "「{name}」的認證方式由外掛程式決定，支援互動式登入的外掛程式可在由此發起授權。",
-   "oauth.plugin_page_hint": "請前往 {name} 的外掛頁面，使用外掛提供的方式新增憑證。",
-+  "oauth.plugin_request_login": "請求登入",
-   "oauth.plugin_open_page": "開啟外掛頁面",
-   "oauth.plugin_login": "請求 {name} 登入",
-   "oauth.plugin_tag": "CPA 外掛",
 diff --git a/web/src/i18n/locales/zh-Hant/shell.ts b/web/src/i18n/locales/zh-Hant/shell.ts
-index 694b45f5..847b58eb 100644
+index 3fda8a95..9d801fd7 100644
 --- a/web/src/i18n/locales/zh-Hant/shell.ts
 +++ b/web/src/i18n/locales/zh-Hant/shell.ts
-@@ -145,6 +145,8 @@ export default {
+@@ -148,6 +148,8 @@ export default {
    "theme.forest_desc": "深綠背景與明亮植物色調",
    "theme.sandstone": "Sandstone",
    "theme.sandstone_desc": "暖砂淺色背景與青綠色強調色",
@@ -149,25 +90,11 @@ index 694b45f5..847b58eb 100644
    "header.logout": "退出",
    "shell.cpa_management_disabled_title": "CPA 未開啟管理介面",
    "shell.cpa_management_disabled_desc": "CLIProxyAPI 未設定管理金鑰，Oh My CPA 無法連線管理介面。",
-diff --git a/web/src/i18n/locales/zh/oauth.ts b/web/src/i18n/locales/zh/oauth.ts
-index 902b5334..e1a2bfbf 100644
---- a/web/src/i18n/locales/zh/oauth.ts
-+++ b/web/src/i18n/locales/zh/oauth.ts
-@@ -137,7 +137,8 @@ export default {
-   'oauth.cancel_failed': '取消失败：{msg}',
-   'oauth.plugin_title': '{name}',
-   'oauth.plugin_hint': '{name} 的认证方式由插件决定，支持交互式登录的插件可在此发起授权。',
--  'oauth.plugin_page_hint': '请前往 {name} 的插件页面，使用插件提供的方式添加凭据。',
-+  'oauth.plugin_page_hint': '可直接点「请求登录」添加账号（登录区域以插件页面的选择为准），或前往 {name} 的插件页面导入凭据。',
-+  'oauth.plugin_request_login': '请求登录',
-   'oauth.plugin_open_page': '打开插件页面',
-   'oauth.plugin_login': '请求 {name} 登录',
-   'oauth.plugin_tag': 'CPA 插件',
 diff --git a/web/src/i18n/locales/zh/shell.ts b/web/src/i18n/locales/zh/shell.ts
-index 9e6e10be..f6871178 100644
+index 4a407e8c..bc32c6c3 100644
 --- a/web/src/i18n/locales/zh/shell.ts
 +++ b/web/src/i18n/locales/zh/shell.ts
-@@ -142,6 +142,8 @@ export default {
+@@ -145,6 +145,8 @@ export default {
    'theme.forest_desc': '深绿背景与明亮植物色调',
    'theme.sandstone': 'Sandstone',
    'theme.sandstone_desc': '暖砂浅色背景与青绿色强调色',
@@ -177,7 +104,7 @@ index 9e6e10be..f6871178 100644
    'shell.cpa_management_disabled_title': 'CPA 未开启管理接口',
    'shell.cpa_management_disabled_desc': 'CLIProxyAPI 未配置管理密钥，Oh My CPA 无法连接管理接口。',
 diff --git a/web/src/main.tsx b/web/src/main.tsx
-index 6fe314d1..0f513697 100644
+index 8651d98e..0bfebf35 100644
 --- a/web/src/main.tsx
 +++ b/web/src/main.tsx
 @@ -2,6 +2,7 @@ import React from 'react';
@@ -189,11 +116,11 @@ index 6fe314d1..0f513697 100644
  
  // Before the first render, so the first frame is painted in the typeface this browser last
 diff --git a/web/src/pages/PluginPageHost.tsx b/web/src/pages/PluginPageHost.tsx
-index 002e59b1..26de08b9 100644
+index b5ad23ae..19067a24 100644
 --- a/web/src/pages/PluginPageHost.tsx
 +++ b/web/src/pages/PluginPageHost.tsx
-@@ -29,7 +29,10 @@ export const PluginPageHost: React.FC = () => {
-   const t = useT();
+@@ -31,7 +31,10 @@ export const PluginPageHost: React.FC = () => {
+   const { t, lang } = useI18n();
    const navigate = useNavigate();
    const { pluginId, pageIndex } = useParams();
 -  const { themeMode } = useTheme();
@@ -202,78 +129,23 @@ index 002e59b1..26de08b9 100644
 +  const framePalette = resolvedTheme.id;
 +  const latestPalette = React.useRef(framePalette);
    const frameTheme: 'dark' | 'light' = themeMode === 'dark' ? 'dark' : 'light';
+   const frameLanguage = languageLocale(lang);
    const [reloadCount, setReloadCount] = React.useState(0);
-   const [frameState, setFrameState] = React.useState<'loading' | 'ready' | 'failed'>('loading');
-@@ -53,11 +56,13 @@ export const PluginPageHost: React.FC = () => {
-     if (!shellRoot) return;
+@@ -81,11 +84,13 @@ export const PluginPageHost: React.FC = () => {
      shellRoot.setAttribute('data-theme', theme);
      shellRoot.style.colorScheme = theme;
+     shellRoot.setAttribute('lang', language);
 +    shellRoot.setAttribute('data-omc-palette', latestPalette.current);
    }, []);
    React.useEffect(() => {
-     latestTheme.current = frameTheme;
+     latestShellContext.current = { theme: frameTheme, language: frameLanguage };
 +    latestPalette.current = framePalette;
-     stateFrameTheme(frameTheme);
--  }, [frameTheme, stateFrameTheme]);
-+  }, [frameTheme, framePalette, stateFrameTheme]);
+     stateShellContext();
+-  }, [frameTheme, frameLanguage, stateShellContext]);
++  }, [frameTheme, frameLanguage, framePalette, stateShellContext]);
  
    React.useEffect(() => {
      setFrameState('loading');
-diff --git a/web/src/pages/oauthManagement/OAuthConnectPanel.tsx b/web/src/pages/oauthManagement/OAuthConnectPanel.tsx
-index 70215b81..9df47006 100644
---- a/web/src/pages/oauthManagement/OAuthConnectPanel.tsx
-+++ b/web/src/pages/oauthManagement/OAuthConnectPanel.tsx
-@@ -280,13 +280,23 @@ export const OAuthConnectPanel: React.FC<OAuthConnectPanelProps> = ({
-                 data-oauth-start={choice.pluginPageRoute ? undefined : choice.id}
-                 data-plugin-connect={choice.pluginPageRoute ? choice.id : undefined}
-               >
--                {target ? t('recovery.recover') : isSuccess ? t('oauth.login_another') : choice.loginLabel}
-+                {target ? t('recovery.recover') : isSuccess && !choice.pluginPageRoute ? t('oauth.login_another') : choice.loginLabel}
-               </Button>
-               {isStartBlocked && (
-                 <Button type="link" data-oauth-default-route onClick={useDefaultRoute}>
-                   {t('oauth.use_default_route')}
-                 </Button>
-               )}
-+              {choice.pluginPageRoute && (
-+                <Button
-+                  loading={session?.starting}
-+                  disabled={isWaiting || isDemo || isStartBlocked}
-+                  onClick={startAuthorization}
-+                  data-oauth-start={choice.id}
-+                >
-+                  {isSuccess ? t('oauth.login_another') : t('oauth.plugin_request_login')}
-+                </Button>
-+              )}
-             </div>
- 
-             {hasStarted && (
-diff --git a/web/src/pages/oauthManagement/useOAuthSessions.ts b/web/src/pages/oauthManagement/useOAuthSessions.ts
-index 9b3a885e..85744051 100644
---- a/web/src/pages/oauthManagement/useOAuthSessions.ts
-+++ b/web/src/pages/oauthManagement/useOAuthSessions.ts
-@@ -274,7 +274,7 @@ export function useOAuthSessions(
-     recovery?: OAuthRecoveryTarget,
-   ) => {
-     const choice = choicesRef.current.find((candidate) => candidate.id === providerId);
--    if (!choice || choice.pluginPageRoute) return;
-+    if (!choice) return;
-     const current = states[providerId];
-     if (startInFlightRef.current[providerId] || isOAuthSessionActive(current) || current?.starting) return;
-     if (current?.requiresProxyReentry && !proxyUrl?.trim() && !isDefaultRouteConfirmed) return;
-diff --git a/web/src/pages/oauthProviderLogic.ts b/web/src/pages/oauthProviderLogic.ts
-index 5913a599..0245b775 100644
---- a/web/src/pages/oauthProviderLogic.ts
-+++ b/web/src/pages/oauthProviderLogic.ts
-@@ -405,7 +405,7 @@ export function pluginOAuthProviderChoices(
-         description: t(pluginPageRoute ? 'oauth.plugin_page_hint' : 'oauth.plugin_hint', { name: title }),
-         loginLabel: t(pluginPageRoute ? 'oauth.plugin_open_page' : 'oauth.plugin_login', { name: title }),
-         pluginId: plugin.id,
--        callback: pluginPageRoute ? undefined : {
-+        callback: {
-           // These rules become usable only after CPA actually starts a redirect session.
-           errorKeys: {
-             invalid: 'oauth.callback_invalid_url',
 diff --git a/web/src/theme/clay.css b/web/src/theme/clay.css
 new file mode 100644
 index 00000000..a5bb2701
@@ -732,7 +604,7 @@ index 00000000..f5f4273f
 +  };
 +}
 diff --git a/web/src/theme/palette.ts b/web/src/theme/palette.ts
-index b849ed72..44cfd7f5 100644
+index a65273ca..2c026df6 100644
 --- a/web/src/theme/palette.ts
 +++ b/web/src/theme/palette.ts
 @@ -35,7 +35,7 @@ export type ThemeMode = 'dark' | 'light';
@@ -752,7 +624,7 @@ index b849ed72..44cfd7f5 100644
  ];
  
  /**
-@@ -592,6 +593,9 @@ export interface BuiltInPalette {
+@@ -587,6 +588,9 @@ export interface BuiltInPalette {
    nameKey: MessageKey;
    descriptionKey: MessageKey;
    core: ThemeCore;
@@ -762,7 +634,7 @@ index b849ed72..44cfd7f5 100644
  }
  
  /**
-@@ -714,6 +718,26 @@ export const BUILT_IN_PALETTES: readonly BuiltInPalette[] = [
+@@ -709,6 +713,26 @@ export const BUILT_IN_PALETTES: readonly BuiltInPalette[] = [
        accent: '#0f766e',
      },
    },
@@ -789,7 +661,7 @@ index b849ed72..44cfd7f5 100644
  ];
  
  /** The palettes one mode offers, in the order the settings page lists them. */
-@@ -824,7 +848,11 @@ export function resolvedBuiltInPalette(id: BuiltInPaletteId): ResolvedPalette {
+@@ -819,7 +843,11 @@ export function resolvedBuiltInPalette(id: BuiltInPaletteId): ResolvedPalette {
    const resolved: ResolvedPalette = {
      id,
      mode: definition.mode,
@@ -803,7 +675,7 @@ index b849ed72..44cfd7f5 100644
      nameKey: definition.nameKey,
    };
 diff --git a/web/src/theme/themeConfig.ts b/web/src/theme/themeConfig.ts
-index ec11be6e..2dcf822f 100644
+index 6f213904..a9e858d0 100644
 --- a/web/src/theme/themeConfig.ts
 +++ b/web/src/theme/themeConfig.ts
 @@ -1,3 +1,4 @@

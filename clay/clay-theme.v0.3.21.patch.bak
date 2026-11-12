@@ -1,0 +1,827 @@
+diff --git a/scripts/test-oauth-providers.ts b/scripts/test-oauth-providers.ts
+index 7c03ddee..73f6df0d 100644
+--- a/scripts/test-oauth-providers.ts
++++ b/scripts/test-oauth-providers.ts
+@@ -325,11 +325,11 @@ test('auth-provider metadata does not declare a redirect flow, and plugin pages
+   assert.equal(choice.flow, 'plugin');
+   assert.equal(choice.pluginPageRoute, '/plugin-pages/key-bridge/0');
+   assert.equal(choice.description, 'oauth.plugin_page_hint');
+-  assert.equal(choice.callback, undefined, 'a plugin-managed connection must not expose callback submission');
++  assert.ok(choice.callback, 'a plugin page provider can still start a host OAuth sign-in and submit its callback');
+   const secondary = pluginOAuthProviderChoices(plugins, t)[1];
+   assert.equal(secondary.id, 'key-service-secondary');
+   assert.equal(secondary.pluginPageRoute, choice.pluginPageRoute);
+-  assert.equal(secondary.callback, undefined);
++  assert.ok(secondary.callback, 'secondary plugin page providers also keep host callback submission');
+   const [pageless] = pluginOAuthProviderChoices([{ ...plugins[0], pages: [] }], t);
+   assert.equal(pageless.flow, 'plugin', 'pageless auth providers have no declared login flow either');
+   assert.equal(pageless.pluginPageRoute, undefined);
+diff --git a/scripts/test-theme-presets.ts b/scripts/test-theme-presets.ts
+index 20b753e0..1d8b14a6 100644
+--- a/scripts/test-theme-presets.ts
++++ b/scripts/test-theme-presets.ts
+@@ -56,11 +56,11 @@ import { test } from 'vitest';
+ test('theme presets', () => {
+   // ── the registry ─────────────────────────────────────────────────────────────
+ 
+-  assert.equal(BUILT_IN_PALETTES.length, 6, 'the registry keeps three palettes per mode');
++  assert.equal(BUILT_IN_PALETTES.length, 7, 'the registry keeps three palettes per mode, plus Clay');
+   assert.equal(new Set(BUILT_IN_PALETTE_IDS).size, BUILT_IN_PALETTE_IDS.length, 'palette ids must be unique');
+   assert.equal(new Set(BUILT_IN_PALETTES.map((definition) => definition.id)).size, BUILT_IN_PALETTES.length);
+   for (const mode of ['dark', 'light'] as const) {
+-    assert.equal(builtInPalettesForMode(mode).length, 3, `${mode} mode offers exactly three palettes`);
++    assert.equal(builtInPalettesForMode(mode).length, mode === 'light' ? 4 : 3, `${mode} mode offers its built-in palettes`);
+     for (const definition of builtInPalettesForMode(mode)) {
+       assert.equal(definition.mode, mode, `${definition.id} belongs to ${mode}`);
+     }
+diff --git a/web/src/charts/ModelUsageDonut.tsx b/web/src/charts/ModelUsageDonut.tsx
+index b0d6a27b..684aa3ff 100644
+--- a/web/src/charts/ModelUsageDonut.tsx
++++ b/web/src/charts/ModelUsageDonut.tsx
+@@ -25,6 +25,9 @@ export interface ModelUsageDonutProps {
+ export const ModelUsageDonut = React.memo<ModelUsageDonutProps>(({ groups, totalTokens, focusedKey = null, foldedLabel, unnamedLabel, tokenUnitLabel, onFocusGroup, onClearFocus }) => {
+   const { theme } = useTheme();
+   const { style: tokenStyle } = useTokenDisplayStyle();
++  // Clay only: a plump continuous torus (thicker tube) with flush segments, so the ring reads as one
++  // clay tube whose colour changes along its length. Other palettes keep stock proportions.
++  const isClay = theme.id === 'clay';
+   const range = React.useMemo(() => seriesColorRange(theme.palette, groups), [theme.palette, groups]);
+   // A zero-token group stays in the ranked list but has no arc to emphasise. Dimming the whole ring
+   // for it would turn a valid zero reading into what looks like a chart-wide disabled state.
+@@ -47,13 +50,13 @@ export const ModelUsageDonut = React.memo<ModelUsageDonutProps>(({ groups, total
+       }]),
+     },
+     series: [{
+-      id: 'model-usage', type: 'pie', data, radius: ['66%', '92%'], padAngle: 1.5,
++      id: 'model-usage', type: 'pie', data, radius: isClay ? ['52%', '96%'] : ['66%', '92%'], padAngle: isClay ? 0 : 1.5,
+       left: 16, right: 16, top: 16, bottom: 16, clockwise: false,
+       label: { show: false }, labelLine: { show: false },
+-      itemStyle: { borderRadius: 3 }, emphasis: { scaleSize: 4, itemStyle: { opacity: 1 } },
++      itemStyle: isClay ? { borderRadius: 0, borderWidth: 0 } : { borderRadius: 3 }, emphasis: { scaleSize: 4, itemStyle: { opacity: 1 } },
+       animationDuration: 0,
+     }],
+-  }), [data, labelOf, tokenStyle, tokenUnitLabel, totalTokens]);
++  }), [data, isClay, labelOf, tokenStyle, tokenUnitLabel, totalTokens]);
+ 
+   const handlers = React.useMemo<EChartHandlers>(() => ({
+     click: (event) => {
+@@ -67,7 +70,7 @@ export const ModelUsageDonut = React.memo<ModelUsageDonutProps>(({ groups, total
+   const share = activeGroup ? formatModelShare(value, totalTokens) : undefined;
+   const centerLabel = `${activeGroup ? `${labelOf(seriesDomainKey(activeGroup))}: ` : ''}${formatTokensFull(value)} ${tokenUnitLabel}${share ? ` · ${share}` : ''}`;
+   return (
+-    <div className="model-ring" role="img" aria-label={centerLabel}>
++    <div className={isClay ? 'model-ring model-ring--clay' : 'model-ring'} role="img" aria-label={centerLabel}>
+       <div className="model-ring-frame">
+         {data.length > 0 && <EChart option={option} label={`${formatTokensFull(totalTokens)} ${tokenUnitLabel}`} handlers={handlers} />}
+         <div className="model-ring-center">
+diff --git a/web/src/i18n/locales/en/oauth.ts b/web/src/i18n/locales/en/oauth.ts
+index afda4fce..69400e6f 100644
+--- a/web/src/i18n/locales/en/oauth.ts
++++ b/web/src/i18n/locales/en/oauth.ts
+@@ -141,6 +141,7 @@ export default {
+   'oauth.plugin_title': '{name}',
+   'oauth.plugin_hint': 'Authentication for {name} is managed by its plugin; interactive flows can be started here.',
+   'oauth.plugin_page_hint': 'Open the {name} plugin page to add credentials using its supported authentication methods.',
++  'oauth.plugin_request_login': 'Request sign-in',
+   'oauth.plugin_open_page': 'Open plugin page',
+   'oauth.plugin_login': 'Request {name} sign-in',
+   'oauth.plugin_tag': 'CPA Plugin',
+diff --git a/web/src/i18n/locales/en/shell.ts b/web/src/i18n/locales/en/shell.ts
+index 1cb7813d..26c1112c 100644
+--- a/web/src/i18n/locales/en/shell.ts
++++ b/web/src/i18n/locales/en/shell.ts
+@@ -145,6 +145,8 @@ export default {
+   'theme.forest_desc': 'Deep green surfaces with vivid botanical accents',
+   'theme.sandstone': 'Sandstone',
+   'theme.sandstone_desc': 'Warm sand surfaces with a teal accent',
++  'theme.clay': 'Clay',
++  'theme.clay_desc': 'Cream surfaces, macaron pastels and soft puffy cards',
+   'header.logout': 'Sign out',
+   'shell.cpa_management_disabled_title': 'CPA\'s Management API is off',
+   'shell.cpa_management_disabled_desc': 'CLIProxyAPI has no management key configured; Oh My CPA cannot access management APIs.',
+diff --git a/web/src/i18n/locales/ms/oauth.ts b/web/src/i18n/locales/ms/oauth.ts
+index e4c75bec..f2b823bc 100644
+--- a/web/src/i18n/locales/ms/oauth.ts
++++ b/web/src/i18n/locales/ms/oauth.ts
+@@ -141,6 +141,7 @@ export default {
+   "oauth.plugin_title": "{name}",
+   "oauth.plugin_hint": "Pengesahan untuk {name} diuruskan oleh pemalamnya; aliran interaktif boleh dimulakan di sini.",
+   "oauth.plugin_page_hint": "Buka halaman pemalam {name} untuk menambah kredensial menggunakan kaedah pengesahan yang disokong.",
++  "oauth.plugin_request_login": "Minta log masuk",
+   "oauth.plugin_open_page": "Buka halaman pemalam",
+   "oauth.plugin_login": "Minta log masuk {name}",
+   "oauth.plugin_tag": "Pemalam CPA",
+diff --git a/web/src/i18n/locales/ms/shell.ts b/web/src/i18n/locales/ms/shell.ts
+index ed6a6a6f..733ff24f 100644
+--- a/web/src/i18n/locales/ms/shell.ts
++++ b/web/src/i18n/locales/ms/shell.ts
+@@ -145,6 +145,8 @@ export default {
+   "theme.forest_desc": "Permukaan hijau dalam dengan aksen botani yang terang",
+   "theme.sandstone": "Batu pasir",
+   "theme.sandstone_desc": "Permukaan pasir hangat dengan aksen teal",
++  "theme.clay": "Clay",
++  "theme.clay_desc": "Permukaan krim, warna pastel makaron dan kad lembut",
+   "header.logout": "Log keluar",
+   "shell.cpa_management_disabled_title": "API Pengurusan CPA dimatikan",
+   "shell.cpa_management_disabled_desc": "CLIProxyAPI tiada kunci pengurusan yang dikonfigurasikan; Oh My CPA tidak dapat mengakses API pengurusan.",
+diff --git a/web/src/i18n/locales/zh-Hant/oauth.ts b/web/src/i18n/locales/zh-Hant/oauth.ts
+index 16c68578..cb92b692 100644
+--- a/web/src/i18n/locales/zh-Hant/oauth.ts
++++ b/web/src/i18n/locales/zh-Hant/oauth.ts
+@@ -141,6 +141,7 @@ export default {
+   "oauth.plugin_title": "{name}",
+   "oauth.plugin_hint": "「{name}」的認證方式由外掛程式決定，支援互動式登入的外掛程式可在由此發起授權。",
+   "oauth.plugin_page_hint": "請前往 {name} 的外掛頁面，使用外掛提供的方式新增憑證。",
++  "oauth.plugin_request_login": "請求登入",
+   "oauth.plugin_open_page": "開啟外掛頁面",
+   "oauth.plugin_login": "請求 {name} 登入",
+   "oauth.plugin_tag": "CPA 外掛",
+diff --git a/web/src/i18n/locales/zh-Hant/shell.ts b/web/src/i18n/locales/zh-Hant/shell.ts
+index 694b45f5..847b58eb 100644
+--- a/web/src/i18n/locales/zh-Hant/shell.ts
++++ b/web/src/i18n/locales/zh-Hant/shell.ts
+@@ -145,6 +145,8 @@ export default {
+   "theme.forest_desc": "深綠背景與明亮植物色調",
+   "theme.sandstone": "Sandstone",
+   "theme.sandstone_desc": "暖砂淺色背景與青綠色強調色",
++  "theme.clay": "Clay 軟陶",
++  "theme.clay_desc": "奶油底色、馬卡龍配色與柔和立體卡片",
+   "header.logout": "退出",
+   "shell.cpa_management_disabled_title": "CPA 未開啟管理介面",
+   "shell.cpa_management_disabled_desc": "CLIProxyAPI 未設定管理金鑰，Oh My CPA 無法連線管理介面。",
+diff --git a/web/src/i18n/locales/zh/oauth.ts b/web/src/i18n/locales/zh/oauth.ts
+index 902b5334..e1a2bfbf 100644
+--- a/web/src/i18n/locales/zh/oauth.ts
++++ b/web/src/i18n/locales/zh/oauth.ts
+@@ -137,7 +137,8 @@ export default {
+   'oauth.cancel_failed': '取消失败：{msg}',
+   'oauth.plugin_title': '{name}',
+   'oauth.plugin_hint': '{name} 的认证方式由插件决定，支持交互式登录的插件可在此发起授权。',
+-  'oauth.plugin_page_hint': '请前往 {name} 的插件页面，使用插件提供的方式添加凭据。',
++  'oauth.plugin_page_hint': '可直接点「请求登录」添加账号（登录区域以插件页面的选择为准），或前往 {name} 的插件页面导入凭据。',
++  'oauth.plugin_request_login': '请求登录',
+   'oauth.plugin_open_page': '打开插件页面',
+   'oauth.plugin_login': '请求 {name} 登录',
+   'oauth.plugin_tag': 'CPA 插件',
+diff --git a/web/src/i18n/locales/zh/shell.ts b/web/src/i18n/locales/zh/shell.ts
+index 9e6e10be..f6871178 100644
+--- a/web/src/i18n/locales/zh/shell.ts
++++ b/web/src/i18n/locales/zh/shell.ts
+@@ -142,6 +142,8 @@ export default {
+   'theme.forest_desc': '深绿背景与明亮植物色调',
+   'theme.sandstone': 'Sandstone',
+   'theme.sandstone_desc': '暖砂浅色背景与青绿色强调色',
++  'theme.clay': 'Clay 软陶',
++  'theme.clay_desc': '奶油底色、马卡龙配色与柔和立体卡片',
+   'header.logout': '退出',
+   'shell.cpa_management_disabled_title': 'CPA 未开启管理接口',
+   'shell.cpa_management_disabled_desc': 'CLIProxyAPI 未配置管理密钥，Oh My CPA 无法连接管理接口。',
+diff --git a/web/src/main.tsx b/web/src/main.tsx
+index 6fe314d1..0f513697 100644
+--- a/web/src/main.tsx
++++ b/web/src/main.tsx
+@@ -2,6 +2,7 @@ import React from 'react';
+ import ReactDOM from 'react-dom/client';
+ import { App } from './App';
+ import './index.css';
++import './theme/clay.css';
+ import { applyStoredFonts } from './theme/fontLibrary';
+ 
+ // Before the first render, so the first frame is painted in the typeface this browser last
+diff --git a/web/src/pages/PluginPageHost.tsx b/web/src/pages/PluginPageHost.tsx
+index 002e59b1..26de08b9 100644
+--- a/web/src/pages/PluginPageHost.tsx
++++ b/web/src/pages/PluginPageHost.tsx
+@@ -29,7 +29,10 @@ export const PluginPageHost: React.FC = () => {
+   const t = useT();
+   const navigate = useNavigate();
+   const { pluginId, pageIndex } = useParams();
+-  const { themeMode } = useTheme();
++  const { themeMode, theme: resolvedTheme } = useTheme();
++  // The palette id (e.g. `clay`) rides along as `data-omc-palette` for plugin pages that want it.
++  const framePalette = resolvedTheme.id;
++  const latestPalette = React.useRef(framePalette);
+   const frameTheme: 'dark' | 'light' = themeMode === 'dark' ? 'dark' : 'light';
+   const [reloadCount, setReloadCount] = React.useState(0);
+   const [frameState, setFrameState] = React.useState<'loading' | 'ready' | 'failed'>('loading');
+@@ -53,11 +56,13 @@ export const PluginPageHost: React.FC = () => {
+     if (!shellRoot) return;
+     shellRoot.setAttribute('data-theme', theme);
+     shellRoot.style.colorScheme = theme;
++    shellRoot.setAttribute('data-omc-palette', latestPalette.current);
+   }, []);
+   React.useEffect(() => {
+     latestTheme.current = frameTheme;
++    latestPalette.current = framePalette;
+     stateFrameTheme(frameTheme);
+-  }, [frameTheme, stateFrameTheme]);
++  }, [frameTheme, framePalette, stateFrameTheme]);
+ 
+   React.useEffect(() => {
+     setFrameState('loading');
+diff --git a/web/src/pages/oauthManagement/OAuthConnectPanel.tsx b/web/src/pages/oauthManagement/OAuthConnectPanel.tsx
+index 70215b81..9df47006 100644
+--- a/web/src/pages/oauthManagement/OAuthConnectPanel.tsx
++++ b/web/src/pages/oauthManagement/OAuthConnectPanel.tsx
+@@ -280,13 +280,23 @@ export const OAuthConnectPanel: React.FC<OAuthConnectPanelProps> = ({
+                 data-oauth-start={choice.pluginPageRoute ? undefined : choice.id}
+                 data-plugin-connect={choice.pluginPageRoute ? choice.id : undefined}
+               >
+-                {target ? t('recovery.recover') : isSuccess ? t('oauth.login_another') : choice.loginLabel}
++                {target ? t('recovery.recover') : isSuccess && !choice.pluginPageRoute ? t('oauth.login_another') : choice.loginLabel}
+               </Button>
+               {isStartBlocked && (
+                 <Button type="link" data-oauth-default-route onClick={useDefaultRoute}>
+                   {t('oauth.use_default_route')}
+                 </Button>
+               )}
++              {choice.pluginPageRoute && (
++                <Button
++                  loading={session?.starting}
++                  disabled={isWaiting || isDemo || isStartBlocked}
++                  onClick={startAuthorization}
++                  data-oauth-start={choice.id}
++                >
++                  {isSuccess ? t('oauth.login_another') : t('oauth.plugin_request_login')}
++                </Button>
++              )}
+             </div>
+ 
+             {hasStarted && (
+diff --git a/web/src/pages/oauthManagement/useOAuthSessions.ts b/web/src/pages/oauthManagement/useOAuthSessions.ts
+index 9b3a885e..85744051 100644
+--- a/web/src/pages/oauthManagement/useOAuthSessions.ts
++++ b/web/src/pages/oauthManagement/useOAuthSessions.ts
+@@ -274,7 +274,7 @@ export function useOAuthSessions(
+     recovery?: OAuthRecoveryTarget,
+   ) => {
+     const choice = choicesRef.current.find((candidate) => candidate.id === providerId);
+-    if (!choice || choice.pluginPageRoute) return;
++    if (!choice) return;
+     const current = states[providerId];
+     if (startInFlightRef.current[providerId] || isOAuthSessionActive(current) || current?.starting) return;
+     if (current?.requiresProxyReentry && !proxyUrl?.trim() && !isDefaultRouteConfirmed) return;
+diff --git a/web/src/pages/oauthProviderLogic.ts b/web/src/pages/oauthProviderLogic.ts
+index 5913a599..0245b775 100644
+--- a/web/src/pages/oauthProviderLogic.ts
++++ b/web/src/pages/oauthProviderLogic.ts
+@@ -405,7 +405,7 @@ export function pluginOAuthProviderChoices(
+         description: t(pluginPageRoute ? 'oauth.plugin_page_hint' : 'oauth.plugin_hint', { name: title }),
+         loginLabel: t(pluginPageRoute ? 'oauth.plugin_open_page' : 'oauth.plugin_login', { name: title }),
+         pluginId: plugin.id,
+-        callback: pluginPageRoute ? undefined : {
++        callback: {
+           // These rules become usable only after CPA actually starts a redirect session.
+           errorKeys: {
+             invalid: 'oauth.callback_invalid_url',
+diff --git a/web/src/theme/clay.css b/web/src/theme/clay.css
+new file mode 100644
+index 00000000..a5bb2701
+--- /dev/null
++++ b/web/src/theme/clay.css
+@@ -0,0 +1,394 @@
++/* ── Clay theme ─────────────────────────────────────────────────────────────
++   Soft pastel claymorphism. Everything is scoped to the Clay palette, so the other
++   built-in palettes are untouched. Selectable in Settings → Appearance. */
++html[data-theme='clay'] {
++  --clay-pink: #f2b4c9;
++  --clay-lavender: #c9bdf8;
++  --clay-mint: #9ee0d2;
++  --clay-peach: #f7c8a4;
++  --clay-periwinkle: #b4c7f5;
++  --clay-shadow: 0 16px 32px -12px rgba(90, 72, 130, .36), 0 4px 10px rgba(90, 72, 130, .12);
++  --clay-shadow-sm: 0 8px 16px -6px rgba(90, 72, 130, .34);
++  --clay-inner: inset 0 2px 0 rgba(255, 255, 255, .92), inset 0 -4px 8px rgba(120, 90, 150, .10);
++  --clay-pill-shadow: 0 10px 18px -8px rgba(90, 70, 140, .42), 0 3px 6px rgba(90, 70, 140, .14), inset 0 2px 0 rgba(255,255,255,.95), inset 0 -3px 6px rgba(90, 70, 150, .14);
++  --clay-cylinder-shine: linear-gradient(180deg, rgba(255,255,255,.55) 0%, rgba(255,255,255,.18) 38%, rgba(0,0,0,.04) 68%, rgba(0,0,0,.16) 100%);
++  --clay-trough: inset 0 3px 6px rgba(90, 70, 130, .18), inset 0 -1px 0 rgba(255,255,255,.65);
++  --font-ui: "Nunito", "Varela Round", "M PLUS Rounded 1c", "HarmonyOS Sans SC", "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans CJK SC", "Noto Sans SC", system-ui, sans-serif !important;
++  --radius-xs: 6px;
++  --radius-sm: 12px;
++  --radius-document: 14px;
++  --radius-control: 14px;
++  --radius-surface: 22px;
++  --radius-thread: 22px;
++  background: var(--bg);
++}
++html[data-theme='clay'] body {
++  font-family: var(--font-ui);
++  background:
++    radial-gradient(900px 500px at 100% -10%, rgba(217, 208, 251, .35), transparent 60%),
++    radial-gradient(700px 420px at -10% 110%, rgba(253, 217, 189, .30), transparent 60%),
++    var(--bg);
++  background-attachment: fixed;
++}
++html[data-theme='clay'] .ant-layout,
++html[data-theme='clay'] .ant-layout-content,
++html[data-theme='clay'] .ant-layout-header { background: transparent !important; }
++
++/* Raised clay tiles */
++html[data-theme='clay'] .ant-card,
++html[data-theme='clay'] .dashboard-tile,
++html[data-theme='clay'] .ant-table-wrapper .ant-table,
++html[data-theme='clay'] .theme-preset-card {
++  border: 1px solid rgba(255, 255, 255, .7) !important;
++  border-radius: 26px !important;
++  background: var(--surface) !important;
++  box-shadow: var(--clay-shadow), var(--clay-inner) !important;
++}
++html[data-theme='clay'] .ant-table-wrapper .ant-table-container { border-radius: 26px; overflow: hidden; }
++html[data-theme='clay'] .ant-table-wrapper .ant-table-thead > tr > th { background: #fbf4ec !important; border-bottom-color: var(--border) !important; }
++
++/* Pastel tint per dashboard tile, cycling the macaron set */
++html[data-theme='clay'] .dashboard-tile { position: relative; overflow: hidden; }
++html[data-theme='clay'] .dashboard-tile::before {
++  content: ""; position: absolute; inset: 0 0 auto 0; height: 100%; pointer-events: none;
++  background: linear-gradient(160deg, var(--tile-tint, var(--clay-lavender)) 0%, transparent 55%); opacity: .55;
++}
++html[data-theme='clay'] .dashboard-tile > * { position: relative; }
++html[data-theme='clay'] .dashboard-cell:nth-child(5n+1) > .dashboard-tile { --tile-tint: var(--clay-lavender); }
++html[data-theme='clay'] .dashboard-cell:nth-child(5n+2) > .dashboard-tile { --tile-tint: var(--clay-pink); }
++html[data-theme='clay'] .dashboard-cell:nth-child(5n+3) > .dashboard-tile { --tile-tint: var(--clay-mint); }
++html[data-theme='clay'] .dashboard-cell:nth-child(5n+4) > .dashboard-tile { --tile-tint: var(--clay-peach); }
++html[data-theme='clay'] .dashboard-cell:nth-child(5n+5) > .dashboard-tile { --tile-tint: var(--clay-periwinkle); }
++
++/* Sidebar: floating soft panel, plump capsule navigation */
++html[data-theme='clay'] .app-sider {
++  background: transparent !important;
++}
++html[data-theme='clay'] .app-sider .ant-layout-sider-children {
++  margin: 12px 0 12px 12px; height: calc(100% - 24px);
++  border-radius: 32px; background: var(--surface);
++  box-shadow: var(--clay-shadow), var(--clay-inner);
++}
++html[data-theme='clay'] .app-brand {
++  border-bottom-color: color-mix(in oklab, var(--border) 70%, transparent) !important;
++}
++html[data-theme='clay'] .app-brand-logo,
++html[data-theme='clay'] .app-brand span,
++html[data-theme='clay'] .app-brand {
++  color: #5344b8 !important;
++  filter: none;
++}
++html[data-theme='clay'] .app-menu .ant-menu-item-group-title {
++  color: #736b84 !important; font-weight: 700; letter-spacing: .12em;
++}
++html[data-theme='clay'] .app-menu .ant-menu-item::after, html[data-theme='clay'] .app-menu .ant-menu-item::before { display: none !important; }
++html[data-theme='clay'] .app-menu .ant-menu-item-selected { border-left: 0 !important; }
++html[data-theme='clay'] .app-menu .ant-menu-item {
++  border-radius: 999px !important; font-weight: 650; height: 40px !important; line-height: 40px !important;
++  margin-block: 4px !important; color: #5a536c !important;
++}
++html[data-theme='clay'] .app-menu .ant-menu-item .anticon,
++html[data-theme='clay'] .app-menu .ant-menu-item-icon { color: #5a536c !important; opacity: .92; }
++html[data-theme='clay'] .app-menu .ant-menu-item:hover {
++  color: #2a2438 !important; background: #f3ebf8 !important;
++}
++html[data-theme='clay'] .app-menu .ant-menu-item:hover .anticon,
++html[data-theme='clay'] .app-menu .ant-menu-item:hover .ant-menu-item-icon { color: #2a2438 !important; }
++html[data-theme='clay'] .app-menu .ant-menu-item-selected {
++  background: linear-gradient(145deg, #d4c6ff 0%, #e8b8d4 55%, #f0c4d8 100%) !important;
++  color: #3a2d9a !important; font-weight: 750;
++  box-shadow: var(--clay-pill-shadow) !important;
++  border-radius: 999px !important;
++  border: 1px solid rgba(255,255,255,.75) !important;
++}
++html[data-theme='clay'] .app-menu .ant-menu-item-selected .anticon,
++html[data-theme='clay'] .app-menu .ant-menu-item-selected .ant-menu-item-icon { color: #3a2d9a !important; opacity: 1; }
++html[data-theme='clay'] .app-menu .ant-menu-item-selected:hover {
++  background: linear-gradient(145deg, #cbb8ff 0%, #e4a9cb 55%, #eeb6d0 100%) !important;
++  color: #322688 !important;
++}
++
++/* Pills */
++html[data-theme='clay'] .ant-btn { border-radius: 999px !important; font-weight: 700; }
++html[data-theme='clay'] .ant-btn-primary { background: linear-gradient(135deg, #6f5fe0, #9b7eec) !important; border: 0 !important; box-shadow: 0 10px 18px -8px rgba(90,70,180,.65), inset 0 1px 0 rgba(255,255,255,.4) !important; }
++html[data-theme='clay'] .ant-btn-default { background: #fffaf5 !important; box-shadow: var(--clay-shadow-sm), var(--clay-inner) !important; }
++html[data-theme='clay'] .ant-tag, html[data-theme='clay'] .tag, html[data-theme='clay'] .status-label {
++  border-radius: 999px !important; padding-inline: 10px;
++}
++html[data-theme='clay'] .ant-segmented { border-radius: 999px; padding: 3px; box-shadow: inset 0 2px 5px rgba(120,100,150,.10); }
++html[data-theme='clay'] .ant-segmented-item, html[data-theme='clay'] .ant-segmented-thumb { border-radius: 999px !important; }
++html[data-theme='clay'] .ant-segmented-item-selected { box-shadow: var(--clay-shadow-sm) !important; }
++
++/* Soft inputs */
++html[data-theme='clay'] .ant-input, html[data-theme='clay'] .ant-input-affix-wrapper,
++html[data-theme='clay'] .ant-select-selector, html[data-theme='clay'] .ant-input-number,
++html[data-theme='clay'] .ant-picker, html[data-theme='clay'] .ant-select {
++  border-radius: 14px !important; background: #fffdfa !important;
++  box-shadow: inset 0 2px 5px rgba(120, 100, 150, .08);
++}
++html[data-theme='clay'] .ant-switch { box-shadow: inset 0 2px 4px rgba(0,0,0,.08); }
++html[data-theme='clay'] .ant-switch.ant-switch-checked, html[data-theme='clay'] .ant-switch.ant-switch-checked:hover:not(.ant-switch-disabled) { background: linear-gradient(135deg, #8f82ea, #f49cb8) !important; }
++
++/* Plump clay cylinders: meters / quota / antd Progress (not the 2px page loader) */
++html[data-theme='clay'] .meter,
++html[data-theme='clay'] .meter-track,
++html[data-theme='clay'] .quota-window-track,
++html[data-theme='clay'] .ant-progress-inner {
++  height: 12px !important;
++  border-radius: 999px !important;
++  background: #e8dced !important;
++  box-shadow: var(--clay-trough) !important;
++  overflow: hidden;
++}
++html[data-theme='clay'] .meter.is-thick { height: 14px !important; }
++html[data-theme='clay'] .meter-fill,
++html[data-theme='clay'] .meter-track span,
++html[data-theme='clay'] .meter-track .meter-fill,
++html[data-theme='clay'] .quota-window-fill,
++html[data-theme='clay'] .ant-progress-bg,
++html[data-theme='clay'] .ant-progress-success-bg {
++  border-radius: 999px !important;
++  /* Keep caller color; layer a height-wise shine for cylinder volume */
++  background-image: var(--clay-cylinder-shine) !important;
++  background-blend-mode: soft-light !important;
++  box-shadow:
++    inset 0 2px 2px rgba(255,255,255,.55),
++    inset 0 -2px 4px rgba(40, 20, 60, .18),
++    0 2px 4px rgba(90, 70, 130, .16) !important;
++}
++html[data-theme='clay'] .legend-dot { border-radius: 999px !important; }
++html[data-theme='clay'] .ant-progress-line .ant-progress-outer { padding-inline-end: 0 !important; }
++html[data-theme='clay'] .ant-progress-bg { height: 12px !important; }
++
++/* Floating layers */
++html[data-theme='clay'] .ant-modal-content, html[data-theme='clay'] .ant-drawer-content,
++html[data-theme='clay'] .ant-dropdown-menu, html[data-theme='clay'] .ant-popover-inner,
++html[data-theme='clay'] .ant-select-dropdown, html[data-theme='clay'] .ant-notification-notice {
++  border-radius: 22px !important; box-shadow: var(--clay-shadow) !important;
++}
++html[data-theme='clay'] *::-webkit-scrollbar-thumb { background: #e2d6ea; border-radius: 999px; }
++html[data-theme='clay'] .app-menu .ant-menu-item { margin-inline: 10px !important; width: calc(100% - 20px) !important; padding-inline: 14px !important; }
++/* Console's own toggle (CSS-module switch) */
++html[data-theme='clay'] [role='switch'][class*='is-checked'] { background: linear-gradient(135deg, #8f82ea, #f49cb8) !important; border-color: transparent !important; }
++html[data-theme='clay'] [role='switch'] { border-radius: 999px !important; --success: #9b8cf2; }
++
++/* ── Page-level coverage (v2): console surfaces drawn by CSS modules / index.css ─────────── */
++/* Raised clay panels: settings groups, config sections, list frames, stat tiles, store cards… */
++html[data-theme='clay'] :is(
++  .settings-group, .terminal-panel, .data-table:not(.data-table-flush), .log-list, .config-editor-wrap,
++  .payload-rule-card, .payload-collapse > .ant-collapse-item, .config-dirty-bar, .req-token-card, .req-waterfall-box,
++  [class*='_stat-tile_'], .ant-collapse:not(.ant-collapse-ghost), .ant-list-bordered,
++  [class*='_store-card_'], [class*='_installed-row_'], [class*='_rule-card_'], [class*='_config-pages_'],
++  [class*='_changelog-panel_'], [class*='_model-row_'], [class*='_step-card_'], [class*='_provider-tile_'],
++  [class*='_session-strip_'], [class*='_advanced-filters_'], [class*='_drawer-section_'], [class*='_item-card_'],
++  [class*='_code-frame_'], [class*='_composer-frame_'], [class*='_upstream-summary_'],
++  [class*='_session-status-card_'],
++  [class*='_vacuum-space-table_'], [class*='_preview-panel_']
++) {
++  border: 1px solid rgba(255, 255, 255, .75) !important;
++  border-radius: 22px !important;
++  background-color: var(--surface) !important;
++  box-shadow: var(--clay-shadow), var(--clay-inner) !important;
++}
++html[data-theme='clay'] :is(.settings-group, .data-table, .log-list, .config-editor-wrap, [class*='_changelog-panel_'], [class*='_code-frame_']) { overflow: hidden; }
++html[data-theme='clay'] [class*='_stat-tile_'] { border-radius: 20px !important; }
++/* The active filter tile: pastel lavender tint instead of the flat selected fill */
++html[data-theme='clay'] :is([class*='_stat-tile-active_'], [class*='_stat-tile_'][aria-pressed='true']) {
++  background: linear-gradient(150deg, #ece6ff, #fde7ef) !important;
++  box-shadow: var(--clay-shadow), inset 0 1px 0 #fff !important;
++}
++html[data-theme='clay'] .settings-group > :first-child { background: transparent; }
++/* List headers, inner rows */
++html[data-theme='clay'] :is(.data-table-head, .data-table > header, .ant-table-thead > tr > th, .ant-table-thead > tr > td) { background: #fbf4ec !important; }
++html[data-theme='clay'] .ant-table-tbody > tr.ant-table-row:hover > td { background: #f7effa !important; }
++html[data-theme='clay'] .ant-table-wrapper .ant-table-container table > thead > tr:first-child > *:first-child { border-start-start-radius: 22px; }
++html[data-theme='clay'] .ant-table-wrapper .ant-table-container table > thead > tr:first-child > *:last-child { border-start-end-radius: 22px; }
++
++/* Inputs: style the outer box only, never an inner field again (no box-in-box) */
++html[data-theme='clay'] :is(.ant-input-affix-wrapper, .ant-input-group-wrapper, .ant-input-number, .ant-select, .ant-picker, .ant-input-search) :is(.ant-input, .ant-input-number-input, .ant-select-selector, input) {
++  background: transparent !important; box-shadow: none !important; border-radius: 0 !important;
++}
++html[data-theme='clay'] .ant-select .ant-select-selector { border: 0 !important; }
++html[data-theme='clay'] textarea.ant-input { border-radius: 16px !important; }
++html[data-theme='clay'] :is(.ant-input:not(:is(.ant-input-affix-wrapper, .ant-input-number, .ant-picker, .ant-select) *), .ant-input-affix-wrapper, .ant-select, .ant-input-number, .ant-picker):is(:focus, :focus-within, .ant-select-focused) {
++  box-shadow: 0 0 0 3px rgba(143, 130, 234, .22), inset 0 2px 5px rgba(120, 100, 150, .06) !important;
++}
++html[data-theme='clay'] :is(.time-range-field, [class*='_picker-search_']) { border-radius: 14px !important; background: #fffdfa !important; }
++
++/* Tags / chips / count pills: macaron fills */
++html[data-theme='clay'] :is([class*='_count-pill_'], [class*='_prefix-chip_'], [class*='_tab-count_'], [class*='_tier-badge_'], .req-active-chips-bar .ant-tag, [class*='_composer-chip_'], [class*='_suggestion_']) {
++  border-radius: 999px !important;
++}
++html[data-theme='clay'] .ant-tag:not([class*='ant-tag-'][class*='-inverse']) { border-color: transparent; }
++html[data-theme='clay'] .ant-badge-count { box-shadow: 0 0 0 2px #fffaf5; }
++
++/* Tabs & segmented filters */
++html[data-theme='clay'] .ant-tabs-ink-bar { height: 3px !important; border-radius: 999px; background: linear-gradient(90deg, #8f82ea, #f49cb8) !important; }
++html[data-theme='clay'] .ant-tabs-nav::before { border-bottom-color: var(--border-soft) !important; }
++html[data-theme='clay'] .ant-radio-button-wrapper:first-child { border-start-start-radius: 999px; border-end-start-radius: 999px; }
++html[data-theme='clay'] .ant-radio-button-wrapper:last-child { border-start-end-radius: 999px; border-end-end-radius: 999px; }
++html[data-theme='clay'] .ant-checkbox-inner { border-radius: 6px; }
++
++/* Icon-only square buttons become soft round buttons */
++html[data-theme='clay'] .ant-btn-icon-only, html[data-theme='clay'] .ant-btn-circle { border-radius: 999px !important; }
++html[data-theme='clay'] .ant-btn-text:not(:disabled):hover, html[data-theme='clay'] .ant-btn-link:not(:disabled):hover { background: #f3edfb !important; }
++html[data-theme='clay'] .ant-btn-dangerous.ant-btn-primary { background: linear-gradient(135deg, #e9839f, #f4a3b4) !important; }
++html[data-theme='clay'] .ant-btn-primary:disabled { opacity: .55; color: #fff !important; }
++
++/* Drawers, modals, popovers, menus, tooltips */
++html[data-theme='clay'] .ant-drawer-content { border-radius: 26px 0 0 26px !important; background: var(--surface) !important; }
++html[data-theme='clay'] .ant-drawer-left .ant-drawer-content { border-radius: 0 26px 26px 0 !important; }
++html[data-theme='clay'] .ant-drawer-bottom .ant-drawer-content { border-radius: 26px 26px 0 0 !important; }
++html[data-theme='clay'] :is(.ant-drawer-header, .ant-modal-header) { background: transparent !important; border-bottom-color: var(--border-soft) !important; }
++html[data-theme='clay'] .ant-drawer-footer { border-top-color: var(--border-soft) !important; }
++html[data-theme='clay'] .ant-modal-content { background: var(--surface) !important; }
++html[data-theme='clay'] :is(.ant-dropdown-menu-item, .ant-select-item, .ant-menu-submenu-popup .ant-menu-item) { border-radius: 12px !important; }
++html[data-theme='clay'] .ant-tooltip-inner { border-radius: 12px !important; }
++html[data-theme='clay'] .ant-message-notice-content { border-radius: 999px !important; box-shadow: var(--clay-shadow) !important; }
++html[data-theme='clay'] .ant-popconfirm .ant-popover-inner { padding: 14px 16px; }
++html[data-theme='clay'] .ant-alert { border-radius: 18px !important; border: 0 !important; box-shadow: var(--clay-shadow-sm); }
++html[data-theme='clay'] .ant-empty-image { opacity: .8; }
++
++/* Header bar & mobile drawer navigation */
++html[data-theme='clay'] .app-header, html[data-theme='clay'] .ant-layout-header { border-bottom-color: transparent !important; backdrop-filter: blur(8px); }
++html[data-theme='clay'] .ant-drawer .app-menu, html[data-theme='clay'] .ant-drawer .ant-menu { background: transparent !important; }
++
++/* Model-usage donut: soft clay torus (thicker tube + outer shade + rim highlight) */
++html[data-theme='clay'] .model-ring--clay .model-ring-frame {
++  /* Leave a little air so the canvas drop-shadow is not clipped by the card. */
++  overflow: visible;
++}
++html[data-theme='clay'] .model-ring--clay .model-ring-frame::before {
++  /* Soft outer trough behind the arcs — reads as the underside of a clay tube. */
++  content: "";
++  position: absolute;
++  inset: 1.5%;
++  border-radius: 50%;
++  pointer-events: none;
++  z-index: 0;
++  background:
++    radial-gradient(circle at 50% 42%,
++      transparent 46%,
++      rgba(255, 255, 255, .55) 54%,
++      rgba(255, 255, 255, .08) 60%,
++      rgba(90, 70, 140, .10) 68%,
++      transparent 74%);
++  mix-blend-mode: soft-light;
++}
++html[data-theme='clay'] .model-ring--clay .model-ring-frame::after {
++  /* Specular highlight along the top of the tube, matching --clay-cylinder-shine. */
++  content: "";
++  position: absolute;
++  inset: 0;
++  border-radius: 50%;
++  pointer-events: none;
++  z-index: 2;
++  background:
++    radial-gradient(circle at 35% 28%, rgba(255, 255, 255, .55) 0%, rgba(255, 255, 255, 0) 42%),
++    radial-gradient(circle at 65% 78%, rgba(60, 40, 100, .16) 0%, rgba(60, 40, 100, 0) 46%);
++  -webkit-mask-image: radial-gradient(circle, transparent 46%, #000 52%, #000 74%, transparent 80%);
++  mask-image: radial-gradient(circle, transparent 46%, #000 52%, #000 74%, transparent 80%);
++}
++html[data-theme='clay'] .model-ring--clay .model-ring-frame > [data-chart-source-type] {
++  z-index: 1;
++  /* Soft clay tube volume: outer shade only on the painted arcs, not on the centre label. */
++  filter: drop-shadow(0 10px 14px rgba(90, 70, 140, .30)) drop-shadow(0 2px 3px rgba(90, 70, 140, .18));
++}
++html[data-theme='clay'] .model-ring--clay .model-ring-center {
++  z-index: 3;
++}
++/* Empty-state track: same plump clay tube when there is no traffic */
++html[data-theme='clay'] .model-ring-track {
++  inset: 10% !important;
++  border-width: 22px !important;
++  border-style: solid !important;
++  border-color: #e0d4ea !important;
++  border-radius: 50% !important;
++  box-shadow:
++    var(--clay-trough),
++    inset 0 2px 2px rgba(255, 255, 255, .55),
++    0 6px 12px rgba(90, 70, 140, .18) !important;
++  background:
++    radial-gradient(circle at 35% 30%, rgba(255, 255, 255, .35), transparent 45%);
++  background-clip: padding-box;
++}
++html[data-theme='clay'] .model-usage-swatch {
++  width: 10px !important;
++  height: 10px !important;
++  border-radius: 999px !important;
++  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), 0 1px 2px rgba(90, 70, 140, .18);
++}
++
++/* Progress / meters drawn by antd (cylinder track already set above) */
++html[data-theme='clay'] .ant-progress-inner, html[data-theme='clay'] .ant-progress-bg { border-radius: 999px !important; }
++html[data-theme='clay'] .ant-progress-inner { background: #e8dced !important; box-shadow: var(--clay-trough) !important; }
++
++/* Pagination */
++html[data-theme='clay'] :is(.ant-pagination-item, .ant-pagination-prev .ant-pagination-item-link, .ant-pagination-next .ant-pagination-item-link) { border-radius: 999px !important; }
++html[data-theme='clay'] .ant-pagination-item-active { background: linear-gradient(135deg, #ece6ff, #fde7ef) !important; border-color: transparent !important; }
++
++/* Code & logs: Monaco follows the palette; frame it softly */
++html[data-theme='clay'] .monaco-editor, html[data-theme='clay'] .monaco-editor .overflow-guard { border-radius: 16px; }
++html[data-theme='clay'] :is(pre, .inline-code, [class*='_inline-code_']) { border-radius: 12px; }
++
++/* Firefox scrollbars */
++html[data-theme='clay'] * { scrollbar-color: #e2d6ea transparent; }
++html[data-theme='clay'] *::-webkit-scrollbar-track { background: transparent; }
++
++/* Plugin page frame and login */
++html[data-theme='clay'] [data-plugin-page-frame] { border-radius: 22px; background: var(--surface); box-shadow: var(--clay-shadow-sm); }
++
++/* Status inks: softer macaron-leaning success / warn / danger (still >=3:1 on the cream card) */
++html[data-theme='clay'] { --success: #2f9e7f !important; --warn: #c97a35 !important; --danger: #d4567a !important; }
++/* Notices: tinted soft pill-panel instead of a flat grey bar with an edge */
++html[data-theme='clay'] .omc-notice {
++  border: 0 !important; border-radius: 20px !important;
++  background: linear-gradient(135deg, color-mix(in oklab, var(--notice-tone) 12%, #fffaf5), #fffaf5) !important;
++  box-shadow: var(--clay-shadow-sm), var(--clay-inner) !important;
++}
++html[data-theme='clay'] .omc-notice::before { display: none !important; }
++/* Quota placeholders and other inset wells */
++html[data-theme='clay'] :is([class*='_record-quota_'] [class*='_empty_'], .payload-empty-box, [class*='_dropzone_']) {
++  border-radius: 14px !important; background: #f6eff6 !important; border-color: transparent !important;
++  box-shadow: inset 0 2px 6px rgba(120, 100, 150, .08) !important;
++}
++html[data-theme='clay'] .log-list, html[data-theme='clay'] .req-list, html[data-theme='clay'] [class*='scroll'] { scrollbar-width: thin; }
++html[data-theme='clay'] ::-webkit-scrollbar-thumb { background: #e2d6ea !important; border-radius: 999px; }
++html[data-theme='clay'] ::-webkit-scrollbar-thumb:hover { background: #cfc0e0 !important; }
++/* A list nested inside an already raised panel stays flat: one frame, never a frame in a frame */
++html[data-theme='clay'] :is(.data-table, .settings-group, .ant-card, .ant-drawer, .ant-modal, [class*='_store-card_'], [class*='_drawer-section_']) .ant-table-wrapper .ant-table,
++html[data-theme='clay'] :is(.data-table, .settings-group, .ant-card) :is(.data-table, .settings-group, .ant-card) {
++  box-shadow: none !important; border-color: var(--border-soft) !important;
++}
++html[data-theme='clay'] .data-table .ant-table-wrapper .ant-table { border: 0 !important; border-radius: 0 !important; background: transparent !important; }
++/* Sign-in: the form sits on a raised clay card over the cream gradient */
++html[data-theme='clay'] .auth-card {
++  padding: 36px 32px !important; border-radius: 28px !important;
++  background: linear-gradient(160deg, rgba(233, 226, 255, .55), transparent 45%), #fffdfa !important;
++  border: 1px solid rgba(255, 255, 255, .9) !important;
++  box-shadow: 0 24px 48px -16px rgba(122, 104, 160, .38), 0 4px 12px rgba(122, 104, 160, .10), var(--clay-inner) !important;
++}
++html[data-theme='clay'] .auth-shell {
++  background: radial-gradient(700px 420px at 50% 30%, rgba(217, 208, 251, .45), transparent 65%),
++    radial-gradient(600px 380px at 90% 100%, rgba(253, 217, 189, .35), transparent 60%), var(--bg) !important;
++}
++/* Inner fields of an affix/number/picker box never draw their own focus ring */
++html[data-theme='clay'] :is(.ant-input-affix-wrapper, .ant-input-number, .ant-picker, .ant-select) input:focus { box-shadow: none !important; outline: none !important; }
++@media (max-width: 480px) { html[data-theme='clay'] .auth-card { padding: 24px 18px !important; } }
++
++/* Segmented stacked vertically (narrow settings rows) or wrapped: a 999px pill turns into a
++   squashed oval, so use a rounded rectangle and keep the thumb inside the padding. */
++html[data-theme='clay'] .ant-segmented-vertical { border-radius: 20px !important; padding: 4px !important; }
++html[data-theme='clay'] .ant-segmented-vertical .ant-segmented-group { position: relative; }
++html[data-theme='clay'] .ant-segmented-vertical .ant-segmented-item,
++html[data-theme='clay'] .ant-segmented-vertical .ant-segmented-thumb { border-radius: 14px !important; }
++html[data-theme='clay'] .ant-segmented-vertical .ant-segmented-thumb {
++  box-sizing: border-box; width: auto !important; left: 0 !important; right: 0 !important; padding: 0 !important;
++}
++html[data-theme='clay'] .ant-segmented-vertical .ant-segmented-item { width: 100%; box-sizing: border-box; }
++html[data-theme='clay'] .ant-segmented:has(.ant-segmented-group[style*='wrap']),
++html[data-theme='clay'] .ant-radio-group:has(> .ant-radio-button-wrapper + .ant-radio-button-wrapper) { max-width: 100%; }
++@media (max-width: 900px) {
++  html[data-theme='clay'] .ant-radio-group { display: inline-flex; flex-wrap: wrap; row-gap: 6px; max-width: 100%; }
++  html[data-theme='clay'] .ant-radio-group .ant-radio-button-wrapper { border-radius: 14px !important; }
++}
+diff --git a/web/src/theme/clayTheme.ts b/web/src/theme/clayTheme.ts
+new file mode 100644
+index 00000000..f5f4273f
+--- /dev/null
++++ b/web/src/theme/clayTheme.ts
+@@ -0,0 +1,51 @@
++import type { ThemeConfig } from 'antd';
++import type { ThemePalette } from './palette';
++
++/**
++ * Clay: a soft pastel "claymorphism" layer over the base Ant Design config.
++ *
++ * Kept as a pure overlay so upstream changes to `createThemeConfig` flow through untouched; the
++ * page-level look (puffy shadows, capsule shapes) lives in `clay.css`, scoped to
++ * `[data-theme='clay']`.
++ */
++const CLAY_SHADOW = '0 10px 24px -8px rgba(122, 104, 160, 0.28), 0 2px 6px rgba(122, 104, 160, 0.10)';
++
++export function applyClayTheme(base: ThemeConfig, t: ThemePalette): ThemeConfig {
++  const comp = base.components ?? {};
++  const pill = { borderRadius: 999, borderRadiusLG: 999, borderRadiusSM: 999 };
++  return {
++    ...base,
++    token: {
++      ...base.token,
++      fontFamily: 'var(--font-ui)',
++      borderRadius: 14,
++      borderRadiusLG: 22,
++      borderRadiusSM: 10,
++      borderRadiusXS: 6,
++      colorSuccess: '#3fae8f',
++      colorWarning: '#e0954a',
++      colorError: '#e06c8a',
++      boxShadow: CLAY_SHADOW,
++      boxShadowSecondary: CLAY_SHADOW,
++      boxShadowTertiary: CLAY_SHADOW,
++    },
++    components: {
++      ...comp,
++      Button: { ...comp.Button, ...pill, controlHeight: 34, primaryShadow: '0 6px 14px -6px rgba(123,111,214,0.6)', defaultShadow: 'none' },
++      Input: { ...comp.Input, borderRadius: 14, activeShadow: `0 0 0 3px ${t.accent}26` },
++      InputNumber: { ...comp.InputNumber, borderRadius: 14 },
++      Select: { ...comp.Select, borderRadius: 14, optionSelectedBg: '#e0d6fb' },
++      Tag: { ...comp.Tag, borderRadiusSM: 999, defaultBg: '#f3eefb' },
++      Segmented: { ...comp.Segmented, ...pill, itemSelectedBg: '#ffffff', trackBg: '#f1e9e1' },
++      Card: { ...comp.Card, borderRadiusLG: 24 },
++      Modal: { ...comp.Modal, borderRadiusLG: 26, boxShadow: CLAY_SHADOW },
++      Drawer: { ...comp.Drawer },
++      Popover: { ...comp.Popover, borderRadiusLG: 18, boxShadowSecondary: CLAY_SHADOW },
++      Dropdown: { ...comp.Dropdown, borderRadiusLG: 18, boxShadowSecondary: CLAY_SHADOW },
++      Menu: { ...comp.Menu, itemBorderRadius: 999, itemHeight: 40, itemColor: '#5a536c', itemSelectedBg: '#d9cef8', itemSelectedColor: '#3d2f9e' },
++      Table: { ...comp.Table, borderRadiusLG: 20, headerBg: '#fbf5ee' },
++      Switch: { ...comp.Switch, colorPrimary: '#7f70e8', colorPrimaryHover: '#6d5dde' },
++      Notification: { ...comp.Notification, borderRadiusLG: 20 },
++    },
++  };
++}
+diff --git a/web/src/theme/palette.ts b/web/src/theme/palette.ts
+index b849ed72..44cfd7f5 100644
+--- a/web/src/theme/palette.ts
++++ b/web/src/theme/palette.ts
+@@ -35,7 +35,7 @@ export type ThemeMode = 'dark' | 'light';
+ 
+ export const THEME_MODES: readonly ThemeMode[] = ['dark', 'light'];
+ 
+-export type BuiltInPaletteId = 'omc-dark' | 'omc-light' | 'pewter' | 'fog' | 'forest' | 'sandstone';
++export type BuiltInPaletteId = 'omc-dark' | 'omc-light' | 'pewter' | 'fog' | 'forest' | 'sandstone' | 'clay';
+ 
+ export const BUILT_IN_PALETTE_IDS: readonly BuiltInPaletteId[] = [
+   'omc-dark',
+@@ -44,6 +44,7 @@ export const BUILT_IN_PALETTE_IDS: readonly BuiltInPaletteId[] = [
+   'fog',
+   'forest',
+   'sandstone',
++  'clay',
+ ];
+ 
+ /**
+@@ -592,6 +593,9 @@ export interface BuiltInPalette {
+   nameKey: MessageKey;
+   descriptionKey: MessageKey;
+   core: ThemeCore;
++  /** Optional chart/route overrides for a palette with its own colour story (Clay). */
++  series?: readonly string[];
++  route?: readonly string[];
+ }
+ 
+ /**
+@@ -714,6 +718,26 @@ export const BUILT_IN_PALETTES: readonly BuiltInPalette[] = [
+       accent: '#0f766e',
+     },
+   },
++  {
++    id: 'clay',
++    mode: 'light',
++    nameKey: 'theme.clay',
++    descriptionKey: 'theme.clay_desc',
++    core: {
++      bg: '#f7f1ea',
++      surface: '#fffaf5',
++      elevated: '#fffdfa',
++      fg: '#322a44',
++      fg2: '#524a66',
++      muted: '#6a6280',
++      meta: '#8a829c',
++      border: '#ece2d8',
++      accent: '#5546bc',
++    },
++    // Macaron hues, deepened just enough to clear the 3:1 graphical-object contrast on the card.
++    series: ['#8f7ef0', '#ed5988', '#349c8c', '#e36a0c', '#528bf0', '#d562c8'],
++    route: ['#8f7ef0', '#349c8c', '#ed5988', '#528bf0', '#e36a0c', '#9488ad'],
++  },
+ ];
+ 
+ /** The palettes one mode offers, in the order the settings page lists them. */
+@@ -824,7 +848,11 @@ export function resolvedBuiltInPalette(id: BuiltInPaletteId): ResolvedPalette {
+   const resolved: ResolvedPalette = {
+     id,
+     mode: definition.mode,
+-    palette: derivePalette(definition.mode, definition.core),
++    palette: {
++      ...derivePalette(definition.mode, definition.core),
++      ...(definition.series ? { series: definition.series } : {}),
++      ...(definition.route ? { route: definition.route } : {}),
++    },
+     isCustom: false,
+     nameKey: definition.nameKey,
+   };
+diff --git a/web/src/theme/themeConfig.ts b/web/src/theme/themeConfig.ts
+index ec11be6e..2dcf822f 100644
+--- a/web/src/theme/themeConfig.ts
++++ b/web/src/theme/themeConfig.ts
+@@ -1,3 +1,4 @@
++import { applyClayTheme } from './clayTheme';
+ import { theme, type ThemeConfig } from 'antd';
+ 
+ import { THREAD_FILL_SHARES, THREAD_RADII, type ResolvedPalette, type ThemePalette } from './palette';
+@@ -101,7 +102,12 @@ function inkWash(ink: string, share: number): string {
+   return `${ink}${Math.round((share / 100) * 255).toString(16).padStart(2, '0')}`;
+ }
+ 
+-export function createThemeConfig(resolved: Pick<ResolvedPalette, 'mode' | 'palette'>): ThemeConfig {
++export function createThemeConfig(resolved: Pick<ResolvedPalette, 'mode' | 'palette'> & { id?: string }): ThemeConfig {
++  const base = createBaseThemeConfig(resolved);
++  return resolved.id === 'clay' ? applyClayTheme(base, resolved.palette) : base;
++}
++
++function createBaseThemeConfig(resolved: Pick<ResolvedPalette, 'mode' | 'palette'>): ThemeConfig {
+   const dark = resolved.mode === 'dark';
+   const t = resolved.palette;
+ 
